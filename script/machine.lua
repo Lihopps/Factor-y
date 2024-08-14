@@ -141,7 +141,6 @@ local function getNumberItem(name,obj, unit_number, type)
             return contentrecipe[name] or 0
         elseif obj.type=="fluid" then
             local contentrecipe=0
-            game.print("la"..name)
             for _,entity in pairs(global.machine[unit_number].inputs_tank) do
                 contentrecipe=contentrecipe+entity.get_fluid_count(name)
             end
@@ -331,7 +330,6 @@ end
 
 --- @param e EventData.on_gui_opened
 local function on_gui_opened(e)
-    game.print("ici")
     if e.entity then
         if e.entity.name == "lihop-machine-electric-interface" then
             local player = game.players[e.player_index]
