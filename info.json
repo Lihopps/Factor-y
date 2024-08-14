@@ -1,0 +1,14 @@
+{
+    "name": "Factor-y",
+    "version": "1.0.0",
+    "title": "Factor-y",
+    "author": "lihop",
+    "contact": "lihops.game@gmail.com",
+    "homepage": "",
+    "factorio_version": "1.1",
+    "dependencies": [
+	"base >=1.0",
+    "RateCalculator-LF >=1.0.0" 
+	],
+    "description": "This do something"
+}
