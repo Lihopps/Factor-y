@@ -10,6 +10,12 @@ local empty = {
     frame_count = 1,
     line_length = 1,
 }
+local sprite = {
+    led_red = empty,
+    led_green = empty,
+    led_blue = empty,
+    led_light = { intensity = 0.5, size = 0 }
+}
 
 data:extend({
     {
@@ -44,7 +50,7 @@ data:extend({
             pipe_covers = pipecoverspictures(),
             pipe_connections =
             {
-                { position = { 0, -1 } ,type="input"},
+                { position = { 0, -1 }, type = "input" },
 
             },
         },
@@ -62,8 +68,41 @@ data:extend({
         vehicle_impact_sound = sounds.generic_impact,
         open_sound = sounds.machine_open,
         close_sound = sounds.machine_close,
-        circuit_wire_connection_points = circuit_connector_definitions["storage-tank"].points,
-        circuit_connector_sprites = circuit_connector_definitions["storage-tank"].sprites,
+        circuit_wire_connection_points = { {
+            wire = {
+                red = { -0.3, -0.5 },
+                green = { 0.3, -0.5 },
+                copper = { 0, -0.5 }
+            },
+            shadow = {}
+        },
+            {
+                wire = {
+                    red = { 0.3, -0.4 },
+                    green = { 0.3, -0.7 },
+                    copper = { 0, 0.5 }
+                },
+                shadow = {}
+            },
+            {
+                wire = {
+                    red = { -0.3, -0.4 },
+                    green = { 0.3, -0.4 },
+                    copper = { 0, 0.5 }
+                },
+                shadow = {}
+            },
+            {
+                wire = {
+                     red = { -0.3, -0.4 },
+                    green = { -0.3, -0.7 },
+                    copper = { 0, 0.5 }
+                },
+                shadow = {}
+            }
+
+        },
+        circuit_connector_sprites = {sprite, sprite, sprite, sprite },
         circuit_wire_max_distance = default_circuit_wire_max_distance,
     },
 })
@@ -71,10 +110,10 @@ data:extend({
 
 
 local lihop_tank_output = table.deepcopy(data.raw["storage-tank"]["lihop-tank-input"])
-lihop_tank_output.name="lihop-tank-output"
-lihop_tank_output.fluid_box.pipe_connections[1].type="output"
+lihop_tank_output.name = "lihop-tank-output"
+lihop_tank_output.fluid_box.pipe_connections[1].type = "output"
 
 local lihop_tank_output_item = table.deepcopy(data.raw["item"]["lihop-tank-input"])
-lihop_tank_output_item.name="lihop-tank-output"
-lihop_tank_output_item.place_result="lihop-tank-output"
-data:extend{lihop_tank_output,lihop_tank_output_item}
+lihop_tank_output_item.name = "lihop-tank-output"
+lihop_tank_output_item.place_result = "lihop-tank-output"
+data:extend { lihop_tank_output, lihop_tank_output_item }

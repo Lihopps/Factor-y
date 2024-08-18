@@ -41,50 +41,129 @@ data:extend({
         minable = { mining_time = 0.1, result = "lihop-machine-electric-interface" },
         max_health = 150,
         corpse = "medium-remnants",
+        --render_layer = "higher-object-under",
         subgroup = "other",
         collision_box = { { -10.4, -4.4 }, { 10.4, 4.4 } },
         selection_box = { { -10.5, -4.5 }, { 10.5, 4.5 } },
-        selection_priority=50,
+        selection_priority = 50,
         damaged_trigger_effect = hit_effects.entity(),
-        gui_mode = "all",
+        gui_mode = "none",
         allow_copy_paste = true,
         energy_source =
         {
             type = "electric",
             usage_priority = "secondary-input",
-            buffer_capacity="1667J",
+            buffer_capacity = "1667J",
             emissions_per_minute = 4
         },
         energy_usage = "100kW",
-        
-        pictures = {
+        continuous_animation = true,
+        animations = {
             north = {
-                filename = "__Factor-y__/graphics/entities/machine/droite.png",
-                priority = "medium",
-                width = 700,
-                height = 300,
-                scale=0.9
+                layers = {
+                    {
+                        filename = "__Factor-y__/graphics/entities/machine/droite.png",
+                        priority = "extra-high",
+                        line_length = 4,
+                        width = 750,
+                        height = 300,
+                        frame_count = 32,
+                        animation_speed=0.5,
+                        shift = util.by_pixel(0, 0),
+                    },
+                    {
+                        filename = "__Factor-y__/graphics/entities/machine/droite-shadow.png",
+                        priority = "extra-high",
+                        line_length = 4,
+                        width = 750,
+                        height = 300,
+                        frame_count = 32,
+                        draw_as_shadow = true,
+                        shift = util.by_pixel(0, 0),
+                    }
+                }
             },
             south = {
-                filename = "__Factor-y__/graphics/entities/machine/gauche.png",
-                priority = "medium",
-                width = 700,
-                height = 300,
-                scale=0.9
+                layers = {
+                    {
+                        filename = "__Factor-y__/graphics/entities/machine/gauche.png",
+                        priority = "extra-high",
+                        line_length = 4,
+                        width = 750,
+                        height = 300,
+                        frame_count = 32,
+                        run_mode="backward",
+                        animation_speed=0.5,
+                        shift = util.by_pixel(0, 0),
+                    },
+                    {
+                        filename = "__Factor-y__/graphics/entities/machine/gauche-shadow.png",
+                        priority = "extra-high",
+                        line_length = 4,
+                        width = 750,
+                        height = 300,
+                        frame_count = 32,
+                        run_mode="backward",
+                        draw_as_shadow = true,
+                        animation_speed=0.5,
+                        shift = util.by_pixel(0, 0),
+                    } }
             },
             east = {
-                filename = "__Factor-y__/graphics/entities/machine/bas.png",
-                priority = "medium",
-                width = 300,
-                height = 700,
-                scale=0.9
+                layers = {
+                    {
+                        filename = "__Factor-y__/graphics/entities/machine/haut.png",
+                        priority = "extra-high",
+                        line_length = 4,
+                        width = 272,
+                        height = 649,
+                        frame_count = 32,
+                        scale=1.06,
+                        run_mode="backward",
+                        animation_speed=0.5,
+                        shift = util.by_pixel(0, 0),
+                    },
+                     {
+                        filename = "__Factor-y__/graphics/entities/machine/haut-shadow.png",
+                        priority = "extra-high",
+                        line_length = 4,
+                        width = 272,
+                        height = 649,
+                        frame_count = 32,
+                        scale=1.06,
+                        run_mode="backward",
+                        draw_as_shadow = true,
+                        animation_speed=0.5,
+                        shift = util.by_pixel(0, 0),
+                    },
+                     }
             },
             west = {
-                filename = "__Factor-y__/graphics/entities/machine/haut.png",
-                priority = "medium",
-                width = 300,
-                height = 700,
-                scale=0.9
+                layers = {
+                    {
+                        filename = "__Factor-y__/graphics/entities/machine/bas.png",
+                        priority = "extra-high",
+                        line_length = 4,
+                        width = 272,
+                        height = 649,
+                        frame_count = 32,
+                        scale=1.06,
+                        animation_speed=0.5,
+                        shift = util.by_pixel(0, 0),
+                    },
+                     {
+                        filename = "__Factor-y__/graphics/entities/machine/bas-shadow.png",
+                        priority = "extra-high",
+                        line_length = 4,
+                        width = 272,
+                        height = 649,
+                        frame_count = 32,
+                        scale=1.06,
+                        draw_as_shadow = true,
+                        animation_speed=0.5,
+                        shift = util.by_pixel(0, 0),
+                    },
+                     }
             }
         },
         open_sound = sounds.machine_open,

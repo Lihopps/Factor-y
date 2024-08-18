@@ -318,7 +318,7 @@ local function on_gui_opened(e)
             if not recipechest then return end
             if not player then return end
             player.opened=recipechest
-            create_gui(player, e.entity.unit_number)
+            --create_gui(player, e.entity.unit_number)
         end
     end
 end

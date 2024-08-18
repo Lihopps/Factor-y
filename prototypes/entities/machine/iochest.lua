@@ -9,7 +9,12 @@ local empty = {
     frame_count = 1,
     line_length = 1,
 }
-
+local sprite = {
+    led_red = empty,
+    led_green = empty,
+    led_blue = empty,
+    led_light = { intensity = 0.5, size = 0 }
+}
 data:extend({
    {
     type = "item",
@@ -60,7 +65,14 @@ data:extend({
         {
             layers ={ empty }
         },
-        landing_location_offset={0, 0}
+        landing_location_offset={0, 0},
+        circuit_wire_connection_points = { 
+                red = { -1.5, -0.5 },
+                green = { 1.5, -0.5 },
+                copper = { 0, -0.5 }
+        },
+        circuit_connector_sprites = sprite,
+        circuit_wire_max_distance = default_circuit_wire_max_distance,
     },
 })
 
