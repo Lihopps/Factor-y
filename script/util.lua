@@ -53,4 +53,71 @@ function util.calc_position(entity,position)
     y=entity.position.y+new_pos.y
   }
 end
+
+function util.test_entity(entity)
+    if entity then
+        if entity.valid then
+            return true
+        else
+            return false
+        end
+    else
+        return false
+    end
+end
+
+function util.insert(entity,player)
+    local inv=entity.get_inventory(defines.inventory.chest).get_contents()
+    for name,count in pairs(inv) do
+        local tot=player.insert({name=name,count=count})
+        if tot>0 then
+            if count~=entity.get_inventory(defines.inventory.chest).remove({name=name,count=tot}) then
+                return false
+            end
+        else
+            return false
+        end
+    end
+    return true
+end
+
+function util.insert2(inv,player)
+    for name,count in pairs(inv.get_contents()) do
+        return player.can_insert({name=name,count=count})
+    end
+    return false
+end
+
+function util.add_errors(errors,error)
+    if not errors[error] then
+        errors[error]=true
+    end
+end
+
+function util.make_caption_errors(errors,default)
+    local caption={"",}
+    if not next(errors) then return default end
+    for name,bool in pairs(errors) do
+        table.insert(caption, "- ")
+        table.insert(caption, {"gui."..name})
+        table.insert(caption,"\n")
+    end
+    return caption
+end
+
+---- create flying text
+function util.entity_flying_text(entity, text, color, pos)
+  local posi = nil
+  if not entity.valid then return end
+  if pos then posi = pos else posi = entity.position end
+  entity.surface.create_entity({
+    type = "flying-text",
+    text_alignment="left",
+    name = "flying-text",
+    position = posi,
+    text = text,
+    color = color,
+  })
+end
+
 return util

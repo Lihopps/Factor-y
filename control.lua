@@ -1,6 +1,5 @@
 local gui = require("__flib__.gui-lite")
 
-local constructor = require("script.constructor")
 local util = require("script.util")
 local machine = require("script.machine")
 
@@ -87,7 +86,47 @@ end)
 
 script.on_event({
 	defines.events.on_pre_player_mined_item,
+}, function(e)
+	local entity = e.entity
+	if not entity or not entity.valid then
+		return
+	end
+	local player=game.players[e.player_index]
+	if not player then return end 
+	if entity.name == "lihop-machine-electric-interface" then
+		machine.destroy_by_player(entity,player)
+	end
+end)
+
+script.on_event({
 	defines.events.on_robot_pre_mined,
+}, function(e)
+	local entity = e.entity
+	if not entity or not entity.valid then
+		return
+	end
+	if entity.name == "lihop-machine-electric-interface" then
+		machine.marked(entity)
+	end
+end)
+
+script.on_event({
+	defines.events.on_player_mined_entity,
+}, function(e)
+	local entity = e.entity
+	if not entity or not entity.valid then
+		return
+	end
+	local player=game.players[e.player_index]
+	if not player then return end 
+	if entity.name == "lihop-machine-electric-interface" then
+		if not util.insert2(e.buffer,player) then
+			e.buffer.clear()
+		end
+	end
+end)
+
+script.on_event({
 	defines.events.on_entity_died,
 }, function(e)
 	local entity = e.entity
@@ -97,6 +136,20 @@ script.on_event({
 	if entity.name == "lihop-machine-electric-interface" then
 		machine.destroy(entity)
 	end
+end)
+
+script.on_event({
+	defines.events.on_marked_for_deconstruction,
+}, function(e)
+	local entity = e.entity
+	if not entity or not entity.valid then
+		return
+	end
+	if entity.name == "lihop-machine-electric-interface" then
+		machine.marked(entity)
+	end
+
+
 end)
 
 

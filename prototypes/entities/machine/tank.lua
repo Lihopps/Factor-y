@@ -21,7 +21,7 @@ data:extend({
     {
         type = "item",
         name = "lihop-tank-input",
-        icons = { { icon = "__base__/graphics/icons/accumulator.png", tint = { r = 1, g = 0.8, b = 1, a = 1 } } },
+        icon = "__Factor-y__/graphics/entities/machine/item.png" ,
         icon_size = 64,
         icon_mipmaps = 4,
         flags = { "hidden" },
@@ -33,16 +33,15 @@ data:extend({
     {
         type = "storage-tank",
         name = "lihop-tank-input",
-        icon = "__base__/graphics/icons/storage-tank.png",
+        icon = "__Factor-y__/graphics/entities/machine/item.png" ,
         icon_size = 64,
         icon_mipmaps = 4,
-        flags = { "placeable-player", "player-creation" },
+        flags = { "placeable-player", "player-creation","not-blueprintable" },
         max_health = 500,
         selection_priority = 101,
-        corpse = "storage-tank-remnants",
-        dying_explosion = "storage-tank-explosion",
         collision_box = { { -0.35, -0.35 }, { 0.35, 0.35 } },
         selection_box = { { -0.5, -0.5 }, { 0.5, 0.5 } },
+        placeable_by = { item = "lihop-machine-electric-interface", count = 1 },
         damaged_trigger_effect = hit_effects.entity(),
         fluid_box =
         {

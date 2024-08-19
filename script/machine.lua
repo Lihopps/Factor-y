@@ -119,11 +119,17 @@ local function add_in_tank(name, obj, outputs_tank)
     end
 end
 
-local function addin(outputs, outputchest, outputs_tank)
+local function addin(outputs, outputchest, outputs_tank,errors)
     for name, obj in pairs(outputs) do
         if obj.type == "item" then
-            outputchest.get_inventory(defines.inventory.chest).insert({ name = name, count = math.floor(obj.count) })
-        elseif type == "fluid" then
+            if math.floor(obj.count)>=1 then
+                errors["lose"]=nil
+                outputchest.get_inventory(defines.inventory.chest).insert({ name = name, count = math.floor(obj.count) })
+            else
+                util.add_errors(errors,"lose")
+                return
+            end
+        elseif obj.type == "fluid" then
             add_in_tank(name, obj, outputs_tank)
         end
     end
@@ -159,13 +165,15 @@ local function makeMachine(recipe, unit_number)
             {
                 type = "label",
                 style_mods = { horizontal_align = "center" },
-                caption = "Machine and Module needed"
+                caption = {"gui.MachineDef"}
             }
         }
     }
     for name, count in pairs(recipe.machines) do
         local realNumber = getNumberItem(name, nil, unit_number, "recipe")
         local color = { 0, 1, 0 }
+        local type="entity"
+        if string.find(name, "module") then type="item" end
         if realNumber < count then
             color = { 1, 0, 0 }
         end
@@ -177,10 +185,10 @@ local function makeMachine(recipe, unit_number)
             {
                 type = "label",
                 style = "rcalc_machines_label",
-                caption = "[entity=" ..
+                caption = "["..type.."=" ..
                     name .. "] x " .. format.number(realNumber, true, 2) .. " / " .. format.number(count, true, 2),
                 style_mods = { font_color = color },
-                tooltip = "Total : " .. realNumber
+                tooltip = {"",{"gui.total"}," : " , realNumber}
 
             }
         }
@@ -197,12 +205,12 @@ local function makeRecipe(recipe, unit_number)
         children = {
             {
                 type = "label",
-                caption = "Recipe",
+                caption = {"gui.recipe"},
                 style_mods = { horizontal_align = "center" },
             },
             {
                 type = "label",
-                caption = "Inputs",
+                caption = {"gui.input"},
                 style_mods = { left_padding = 10 },
             }
         }
@@ -227,7 +235,7 @@ local function makeRecipe(recipe, unit_number)
                     "=" ..
                     name ..
                     "] x" .. format.number(realNumber, true, 2) .. " / " .. format.number(math.ceil(obj.count), true, 2),
-                tooltip = "Total : " .. realNumber
+                tooltip = {"",{"gui.total"}," : ", realNumber}
 
             }
         }
@@ -236,7 +244,7 @@ local function makeRecipe(recipe, unit_number)
     flow.children[#flow.children + 1] = { type = "line", direction = "horizontal" }
     flow.children[#flow.children + 1] = {
         type = "label",
-        caption = "Ouputs",
+        caption = {"gui.output"},
         style_mods = { left_padding = 10 },
     }
     for name, obj in pairs(recipe.outputs) do
@@ -249,8 +257,7 @@ local function makeRecipe(recipe, unit_number)
                 type = "label",
                 style = "rcalc_machines_label",
                 caption = "[" .. obj.type .. "=" .. name .. "] x" .. format.number(math.floor(obj.count), true, 2),
-                tooltip = "Total : " .. math.ceil(obj.count)
-
+                tooltip = {"",{"gui.total"}," : " ,math.ceil(obj.count)}
             }
         }
         flow.children[#flow.children + 1] = sflow
@@ -271,8 +278,9 @@ local function recipegui(unit_number)
         flow.children[1] = makeMachine(recipe, unit_number)
         flow.children[2] = { type = "line", direction = "vertical" }
         flow.children[3] = makeRecipe(recipe, unit_number)
+        global.machine[unit_number].errors["noRecipe"]=nil
     else
-        flow.children[1] = { type = "label", caption = "No Recipe Found" }
+        util.add_errors(global.machine[unit_number].errors,"noRecipe")
     end
     return flow
 end
@@ -317,7 +325,7 @@ local function on_gui_opened(e)
             local recipechest = e.entity.surface.find_entity("lihop-recipechest", e.entity.position)
             if not recipechest then return end
             if not player then return end
-            player.opened=recipechest
+            player.opened = recipechest
             --create_gui(player, e.entity.unit_number)
         end
     end
@@ -365,24 +373,112 @@ function machine.build(entity)
         outputchest = outputchest,
         inputs_tank = inputs_tank,
         outputs_tank = outputs_tank,
-        recipe = {}
+        recipe = {},
+        errors={}
     }
 end
 
-function machine.destroy(entity)
-    if global.machine[entity.unit_number].recipechest then global.machine[entity.unit_number].recipechest.destroy() end
-    if global.machine[entity.unit_number].inputchest then global.machine[entity.unit_number].inputchest.destroy() end
-    if global.machine[entity.unit_number].outputchest then global.machine[entity.unit_number].outputchest.destroy() end
+function machine.marked(entity)
+    if util.test_entity(global.machine[entity.unit_number].recipechest) then
+        global.machine[entity.unit_number]
+            .recipechest.order_deconstruction(entity.force)
+    end
+    if util.test_entity(global.machine[entity.unit_number].inputchest) then
+        global.machine[entity.unit_number]
+            .inputchest.order_deconstruction(entity.force)
+    end
+    if util.test_entity(global.machine[entity.unit_number].outputchest) then
+        global.machine[entity.unit_number]
+            .outputchest.order_deconstruction(entity.force)
+    end
     if global.machine[entity.unit_number].inputs_tank then
         for _, entity in pairs(global.machine[entity.unit_number].inputs_tank) do
-            if entity then
+            if util.test_entity(entity) then
+                entity.order_deconstruction(entity.force)
+            end
+        end
+    end
+    if global.machine[entity.unit_number].outputs_tank then
+        for _, entity in pairs(global.machine[entity.unit_number].outputs_tank) do
+            if util.test_entity(entity) then
+                entity.order_deconstruction(entity.force)
+            end
+        end
+    end
+end
+
+function machine.destroy_by_player(entity, player)
+    local tot = 0
+    if util.test_entity(global.machine[entity.unit_number].recipechest) then
+        if util.insert(global.machine[entity.unit_number].recipechest,player) then
+            tot=tot+1
+        end
+    end
+    if util.test_entity(global.machine[entity.unit_number].inputchest) then
+        if util.insert(global.machine[entity.unit_number].inputchest,player) then
+            tot=tot+1
+        end
+    end
+    if util.test_entity(global.machine[entity.unit_number].outputchest) then
+        if util.insert(global.machine[entity.unit_number].outputchest,player) then
+            tot=tot+1
+        end
+    end
+
+    if tot == 3 then
+        global.machine[entity.unit_number].recipechest.destroy()
+        global.machine[entity.unit_number].inputchest.destroy()
+        global.machine[entity.unit_number].outputchest.destroy()
+
+        if global.machine[entity.unit_number].inputs_tank then
+            for _, entity in pairs(global.machine[entity.unit_number].inputs_tank) do
+                if util.test_entity(entity) then
+                    entity.destroy()
+                end
+            end
+        end
+        if global.machine[entity.unit_number].outputs_tank then
+            for _, entity in pairs(global.machine[entity.unit_number].outputs_tank) do
+                if util.test_entity(entity) then
+                    entity.destroy()
+                end
+            end
+        end
+
+        global.machine_index[global.machine[entity.unit_number].index] = nil
+        global.machine[entity.unit_number] = nil
+    else
+        --il faut break la construction
+        local entity_tmp=entity.surface.create_entity{name=entity.name,direction=entity.direction,position=entity.position,force=entity.force}
+        global.machine[entity_tmp.unit_number]=global.machine[entity.unit_number]
+        global.machine_index[global.machine[entity_tmp.unit_number].index] = entity_tmp.unit_number
+        --game.print("on break")
+    end
+end
+
+function machine.destroy(entity)
+    if util.test_entity(global.machine[entity.unit_number].recipechest) then
+        global.machine[entity.unit_number]
+            .recipechest.destroy()
+    end
+    if util.test_entity(global.machine[entity.unit_number].inputchest) then
+        global.machine[entity.unit_number]
+            .inputchest.destroy()
+    end
+    if util.test_entity(global.machine[entity.unit_number].outputchest) then
+        global.machine[entity.unit_number]
+            .outputchest.destroy()
+    end
+    if global.machine[entity.unit_number].inputs_tank then
+        for _, entity in pairs(global.machine[entity.unit_number].inputs_tank) do
+            if util.test_entity(entity) then
                 entity.destroy()
             end
         end
     end
     if global.machine[entity.unit_number].outputs_tank then
         for _, entity in pairs(global.machine[entity.unit_number].outputs_tank) do
-            if entity then
+            if util.test_entity(entity) then
                 entity.destroy()
             end
         end
@@ -394,12 +490,18 @@ function machine.destroy(entity)
 end
 
 function machine.update(unit_number)
+    if not unit_number then return end
     local electric = global.machine[unit_number].electric
     local recipechest = global.machine[unit_number].recipechest
     local inputchest = global.machine[unit_number].inputchest
     local outputchest = global.machine[unit_number].outputchest
     local inputs_tank = global.machine[unit_number].inputs_tank
     local outputs_tank = global.machine[unit_number].outputs_tank
+    local errors = global.machine[unit_number].errors
+    if not errors then 
+        global.machine[unit_number].errors={}
+        errors=global.machine[unit_number].errors
+    end
 
     if electric and recipechest and inputchest and outputchest then
         if electric.valid and recipechest.valid and inputchest.valid and outputchest.valid then
@@ -410,19 +512,46 @@ function machine.update(unit_number)
                     global.machine[unit_number].recipe = recipe.tags
                     electric.electric_buffer_size = recipe.tags["energy"] / 60
                     electric.power_usage = recipe.tags["energy"]
-                    if electric.energy == electric.electric_buffer_size and allMachine(recipe.tags["machines"], contentrecipe) then
-                        if allinput(recipe.tags["inputs"], inputchest, inputs_tank) then
-                            removeall(recipe.tags["inputs"], inputchest, inputs_tank)
-                            addin(recipe.tags["outputs"], outputchest, outputs_tank)
+                    if electric.energy == electric.electric_buffer_size then 
+                        if allMachine(recipe.tags["machines"], contentrecipe) then
+                            if allinput(recipe.tags["inputs"], inputchest, inputs_tank) then
+                                removeall(recipe.tags["inputs"], inputchest, inputs_tank)
+                                addin(recipe.tags["outputs"], outputchest, outputs_tank,errors)
+                                if errors then errors={} end
+                            end
+                            errors["missingMachine"]=nil
+                        else
+                            util.add_errors(errors,"missingMachine")
                         end
+                        errors["energy"]=nil
+                    else
+                        util.add_errors(errors,"energy")
                     end
                 end
+                errors["noRecipe"]=nil
+                errors["moreRecipe"]=nil
             else
-                    global.machine[unit_number].recipe = {}
-                    electric.electric_buffer_size = 100000 / 60
-                    electric.power_usage = 100000
+                global.machine[unit_number].recipe = {}
+                electric.electric_buffer_size = 100000 / 60
+                electric.power_usage = 100000
+                if contentrecipe["lihop-factoryrecipe"] == 0 or not next(contentrecipe) or not contentrecipe["lihop-factoryrecipe"] then
+                    errors["moreRecipe"]=nil
+                    util.add_errors(errors,"noRecipe")
+                elseif contentrecipe["lihop-factoryrecipe"] >1 then
+                    errors["noRecipe"]=nil
+                    util.add_errors(errors,"moreRecipe")
+                end
             end
+            errors["invalideEntity"]=nil
+        else
+            util.add_errors(errors,"invalideEntity")
         end
+        errors["missingEntity"]=nil
+    else
+        util.add_errors(errors,"missingEntity")
+    end
+    if next(errors) then
+        util.entity_flying_text(electric, util.make_caption_errors(errors), {r=1,g=0,b=0}, nil)
     end
 end
 
@@ -450,11 +579,11 @@ function create_gui(player, unit_number)
                     {
                         type = "label",
                         style = "frame_title",
-                        caption = { "mod-name.RateCalculator" },
+                        caption = { "gui.titleBigFactory" },
                         ignored_by_interaction = true,
                     },
                     { type = "empty-widget", style = "flib_titlebar_drag_handle", ignored_by_interaction = true },
-                    },
+                },
                 {
                     type = "frame",
                     style = "inside_shallow_frame",
@@ -467,7 +596,7 @@ function create_gui(player, unit_number)
                         {
                             type = "label",
                             style_mods = { left_padding = 3 },
-                            caption = "Power :"
+                            caption = {"",{"gui.power"}," :"}
                         },
                         {
                             type = "progressbar",
@@ -477,7 +606,7 @@ function create_gui(player, unit_number)
                         {
                             type = "label",
                             style_mods = { left_padding = 3 },
-                            caption = "Consumption :"
+                            caption = {"",{"gui.consumption"}," :"}
                         },
                         {
                             type = "label",
@@ -490,6 +619,7 @@ function create_gui(player, unit_number)
                         direction = "horizontal",
                         name = "scrollRecipe",
                         style_mods = { margin = 5 },
+                        { type = "label", caption = util.make_caption_errors(global.machine[unit_number].errors,{"gui.noError"}) },
                         recipegui(unit_number),
                     }
                 }
@@ -510,10 +640,15 @@ function machine.update_gui(opened, bool)
     --update power
     local electric = global.machine[opened.unit_number].electric
     opened.elems.power.children[4].caption = format.number(electric.power_usage, true, 2) .. "W"
-    opened.elems.power.children[2].value = electric.energy / electric.electric_buffer_size
+    if electric.electric_buffer_size>0 then
+        opened.elems.power.children[2].value = electric.energy / electric.electric_buffer_size
+    else
+        opened.elems.power.children[2].value=0
+    end
     --update machine and recipe
     if bool then
         opened.elems.scrollRecipe.clear()
+        gui.add(opened.elems.scrollRecipe,{ type = "label", caption = util.make_caption_errors(global.machine[opened.unit_number].errors,{"gui.noError"}) })
         gui.add(opened.elems.scrollRecipe, recipegui(opened.unit_number))
     end
 end

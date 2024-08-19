@@ -1,7 +1,7 @@
 local gui = require("__flib__.gui-lite")
 local constructor = {}
 
-local function frame_action_button(name, sprite, tooltip,handler)
+local function frame_action_button(name, sprite, tooltip, handler)
   return {
     type = "sprite-button",
     name = name,
@@ -26,39 +26,42 @@ end
 
 --- @param e EventData.on_gui_opened
 local function on_gui_opened(e)
-if e.element then
-		if e.element.name == "rcalc_window" then
-			constructor.build(e.element)
-		end
-	end
+  if e.element then
+    if e.element.name == "rcalc_window" then
+      game.print("la")
+      constructor.build(e.element)
+    end
+  end
 end
 
 
 --- @param e EventData.on_gui_click
 local function on_constructor_button_click(e)
-   if e.element then
-		if e.element.name == "lihop_constructor_button" then
-			local guiData = remote.call("RateCalculator", "getGuidata", e.player_index)
-			if guiData then
-				local selected_index = guiData.selected_set_index
-				local set = guiData.sets[selected_index]
-				local recipe = constructor.createRecipe(set, selected_index, game.players[e.player_index])
-				game.write_file("set.json", game.table_to_json(set))
-			end
-		end
-	end
+  if e.element then
+    if e.element.name == "lihop_constructor_button" then
+      local guiData = remote.call("RateCalculator", "getGuidata", e.player_index)
+      if guiData then
+        local selected_index = guiData.selected_set_index
+        local set = guiData.sets[selected_index]
+        local recipe = constructor.createRecipe(set, selected_index, game.players[e.player_index])
+        game.write_file("set.json", game.table_to_json(set))
+      end
+    end
+  end
 end
 
 function constructor.build(element)
-  if element.children[1].lihop_constructor_button then   --already present
+  if element.children[1].lihop_constructor_button then --already present
     return
   end
   child_index = #element.children[1].children
-  gui.add(element.children[1],frame_action_button("lihop_constructor_button", "utility/search",{ "gui.flib-search-instruction" },on_constructor_button_click))
+  gui.add(element.children[1],
+    frame_action_button("lihop_constructor_button", "utility/technology", { "gui.create-recipe" },
+      on_constructor_button_click))
   element.children[1].swap_children(child_index, child_index + 1)
- end
+end
 
-function constructor.createRecipe(set, index,player)
+function constructor.createRecipe(set, index, player)
   --game.write_file("set.json", game.table_to_json(set))
   --Structure of recipe
   --input{}
@@ -114,7 +117,8 @@ function constructor.createRecipe(set, index,player)
 
   if isIntermediatesOk(intermediates) then
     for name, count in pairs(global.buildings[index]) do
-      machines[name]=count
+      machines[name] = count
+      --game.print(name.." : "..count)
     end
     local recipe = {
       inputs = inputs,
@@ -124,10 +128,8 @@ function constructor.createRecipe(set, index,player)
       polution = polution
 
     }
-    --game.write_file("recipe.json", game.table_to_json(recipe))
-    --game.write_file("table.json", game.table_to_json(global.buildings))
-    player.cursor_stack.set_stack({name="lihop-factoryrecipe",count=1})
-    player.cursor_stack.tags=recipe
+    player.cursor_stack.set_stack({ name = "lihop-factoryrecipe", count = 1 })
+    player.cursor_stack.tags = recipe
     return recipe
   else
     game.print("not good")
@@ -140,7 +142,7 @@ constructor.events = {
 }
 
 gui.add_handlers({
-    on_constructor_button_clic = on_constructor_button_click,
+  on_constructor_button_clic = on_constructor_button_click,
 })
 
 
