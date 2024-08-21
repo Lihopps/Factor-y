@@ -16,19 +16,10 @@ local function frame_action_button(name, sprite, tooltip, handler)
   }
 end
 
-local function isIntermediatesOk(intermediates)
-  for _, num in pairs(intermediates) do
-    if num < 0 then return false end
-  end
-  return true
-end
-
-
 --- @param e EventData.on_gui_opened
 local function on_gui_opened(e)
   if e.element then
     if e.element.name == "rcalc_window" then
-      game.print("la")
       constructor.build(e.element)
     end
   end
@@ -95,7 +86,11 @@ function constructor.createRecipe(set, index, player)
     if output.rate > 0 and input.rate > 0 then
       -- category = "intermediates"
       sorting_rate = output.rate - input.rate
-      intermediates[rates.name] = sorting_rate
+      if sorting_rate>0 then
+        outputs[rates.name] = { type = rates.type, count = sorting_rate }
+      elseif sorting_rate<0 then
+        inputs[rates.name] = { type = rates.type, count = -sorting_rate }
+      end
       for machine, num in pairs(output.machine_counts) do
         if machines[machine] then machines[machine] = machines[machine] + num else machines[machine] = num end
       end
@@ -111,30 +106,26 @@ function constructor.createRecipe(set, index, player)
         if machines[machine] then machines[machine] = machines[machine] + num else machines[machine] = num end
       end
     end
-
+  
     ::continue::
   end
 
-  if isIntermediatesOk(intermediates) then
-    for name, count in pairs(global.buildings[index]) do
-      machines[name] = count
-      --game.print(name.." : "..count)
-    end
-    local recipe = {
-      inputs = inputs,
-      outputs = outputs,
-      machines = machines,
-      energy = energy,
-      polution = polution
 
-    }
-    player.cursor_stack.set_stack({ name = "lihop-factoryrecipe", count = 1 })
-    player.cursor_stack.tags = recipe
-    return recipe
-  else
-    game.print("not good")
-    return -1
+  for name, count in pairs(global.buildings[index]) do
+    machines[name] = count
+    --game.print(name.." : "..count)
   end
+  local recipe = {
+    inputs = inputs,
+    outputs = outputs,
+    machines = machines,
+    energy = energy,
+    polution = polution
+
+  }
+  player.cursor_stack.set_stack({ name = "lihop-factoryrecipe", count = 1 })
+  player.cursor_stack.tags = recipe
+  return recipe
 end
 
 constructor.events = {

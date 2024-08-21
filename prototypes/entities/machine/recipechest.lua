@@ -48,7 +48,7 @@ data:extend({
             }
         },
         fast_replaceable_group = "container",
-        inventory_size = 64,
+        inventory_size = 256,
         logistic_mode = "requester",
         open_sound = { filename = "__base__/sound/metallic-chest-open.ogg", volume = 0.43 },
         close_sound = { filename = "__base__/sound/metallic-chest-close.ogg", volume = 0.43 },
