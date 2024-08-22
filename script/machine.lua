@@ -372,51 +372,6 @@ local function recipegui(unit_number)
     return flow
 end
 
---- @param player_index number
-local function destroy_gui(player_index)
-    local self = global.gui[player_index]
-    if not self then
-        return
-    end
-    global.gui[player_index] = nil
-    local window = self.elems.lihop_machine
-    if not window.valid then
-        return
-    end
-    window.destroy()
-end
-
---- @param e EventData.on_gui_closed
-local function on_gui_closed(e)
-    if e.entity then
-        if e.entity.name == "lihop-recipechest" then
-            local player = game.players[e.player_index]
-            if not player then return end
-            destroy_gui(e.player_index)
-        end
-    end
-end
-
---- @param e EventData.on_gui_opened
-local function on_gui_opened(e)
-    if e.entity then
-        if e.entity.name == "lihop-recipechest" then
-            local player = game.players[e.player_index]
-            local elecinterface = e.entity.surface.find_entity("lihop-machine-electric-interface", e.entity.position)
-            if not elecinterface then return end
-            if not player then return end
-            --player.opened = e.entity
-            create_gui(player, elecinterface.unit_number)
-        elseif e.entity.name == "lihop-machine-electric-interface" then
-            local player = game.players[e.player_index]
-            local recipechest = e.entity.surface.find_entity("lihop-recipechest", e.entity.position)
-            if not recipechest then return end
-            if not player then return end
-            player.opened = recipechest
-            --create_gui(player, e.entity.unit_number)
-        end
-    end
-end
 --------------------------------------------------------------------------------------------------
 ----------------------------------------- MACHINE ------------------------------------------------
 --------------------------------------------------------------------------------------------------
@@ -647,7 +602,7 @@ end
 -------------------------------------------------------------------------------------------------------------------
 --- @param player LuaPlayer
 --- @return GuiData
-function create_gui(player, unit_number)
+function machine.create_gui(player, unit_number)
     if not player.gui.relative.lihop_machine then
         local elems = gui.add(player.gui.relative,
             {
@@ -757,10 +712,19 @@ function machine.update_gui(opened, bool)
     end
 end
 
-machine.events = {
-    [defines.events.on_gui_opened] = on_gui_opened,
-    [defines.events.on_gui_closed] = on_gui_closed,
-}
+--- @param player_index number
+function machine.destroy_gui(player_index)
+    local self = global.gui[player_index]
+    if not self then
+        return
+    end
+    global.gui[player_index] = nil
+    local window = self.elems.lihop_machine
+    if not window.valid then
+        return
+    end
+    window.destroy()
+end
 
 gui.add_handlers({
     on_requestmachine_button_clic = on_requestmachine_button_click,

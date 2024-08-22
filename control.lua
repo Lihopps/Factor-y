@@ -2,16 +2,17 @@ local gui = require("__flib__.gui-lite")
 
 local util = require("script.util")
 local machine = require("script.machine")
-
-local handler = require("__core__.lualib.event_handler")
-handler.add_libraries({
-	require("__flib__.gui-lite"),
-	require("script.machine"),
-	require("script.constructor")
-})
+local constructor = require("script.constructor")
+-- local handler = require("__core__.lualib.event_handler")
+-- handler.add_libraries({
+-- 	require("__flib__.gui-lite"),
+-- 	require("script.machine"),
+-- 	require("script.constructor")
+-- })
 
 --BOOTSTRAP
 gui.handle_events()
+
 script.on_init(function()
 	if not global.buildings then global.buildings = {} end
 	if not global.machine_index then global.machine_index = {} end
@@ -52,8 +53,8 @@ script.on_event({ defines.events.on_tick },
 
 script.on_nth_tick(30, function(e)
 	--updategui if opened
-	for _,opened in pairs(global.gui) do
-		machine.update_gui(opened,true)
+	for _, opened in pairs(global.gui) do
+		machine.update_gui(opened, true)
 	end
 end)
 
@@ -91,10 +92,10 @@ script.on_event({
 	if not entity or not entity.valid then
 		return
 	end
-	local player=game.players[e.player_index]
-	if not player then return end 
+	local player = game.players[e.player_index]
+	if not player then return end
 	if entity.name == "lihop-machine-electric-interface" then
-		machine.destroy_by_player(entity,player)
+		machine.destroy_by_player(entity, player)
 	end
 end)
 
@@ -117,10 +118,10 @@ script.on_event({
 	if not entity or not entity.valid then
 		return
 	end
-	local player=game.players[e.player_index]
-	if not player then return end 
+	local player = game.players[e.player_index]
+	if not player then return end
 	if entity.name == "lihop-machine-electric-interface" then
-		if not util.insert2(e.buffer,player) then
+		if not util.insert2(e.buffer, player) then
 			e.buffer.clear()
 		end
 	end
@@ -148,18 +149,46 @@ script.on_event({
 	if entity.name == "lihop-machine-electric-interface" then
 		machine.marked(entity)
 	end
-
-
 end)
 
 
 --------------------------------------------------------------------------------------------------------
 --------------------------------------- Gestion des Gui ------------------------------------------------
 --------------------------------------------------------------------------------------------------------
+script.on_event(defines.events.on_gui_opened, function(e)
+	if e.element then
+		if e.element.name == "rcalc_window" then
+			constructor.build(e.element)
+		end
+	end
+	if e.entity then
+		if e.entity.name == "lihop-recipechest" then
+			local player = game.players[e.player_index]
+			local elecinterface = e.entity.surface.find_entity("lihop-machine-electric-interface", e.entity.position)
+			if not elecinterface then return end
+			if not player then return end
+			--player.opened = e.entity
+			machine.create_gui(player, elecinterface.unit_number)
+		elseif e.entity.name == "lihop-machine-electric-interface" then
+			local player = game.players[e.player_index]
+			local recipechest = e.entity.surface.find_entity("lihop-recipechest", e.entity.position)
+			if not recipechest then return end
+			if not player then return end
+			player.opened = recipechest
+			--create_gui(player, e.entity.unit_number)
+		end
+	end
+end)
 
-
-
-
+script.on_event(defines.events.on_gui_closed, function(e)
+	if e.entity then
+		if e.entity.name == "lihop-recipechest" then
+			local player = game.players[e.player_index]
+			if not player then return end
+			machine.destroy_gui(e.player_index)
+		end
+	end
+end)
 --------------------------------------------------------------------------------------------------------
 ------------------------------------------ PLAYER ------------------------------------------------------
 --------------------------------------------------------------------------------------------------------

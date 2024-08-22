@@ -16,16 +16,6 @@ local function frame_action_button(name, sprite, tooltip, handler)
   }
 end
 
---- @param e EventData.on_gui_opened
-local function on_gui_opened(e)
-  if e.element then
-    if e.element.name == "rcalc_window" then
-      constructor.build(e.element)
-    end
-  end
-end
-
-
 --- @param e EventData.on_gui_click
 local function on_constructor_button_click(e)
   if e.element then
@@ -87,9 +77,9 @@ function constructor.createRecipe(set, index, player)
       -- category = "intermediates"
       sorting_rate = output.rate - input.rate
       if sorting_rate>0 then
-        outputs[rates.name] = { type = rates.type, count = sorting_rate }
+        outputs[rates.name] = { type = rates.type, count = math.floor(sorting_rate) }
       elseif sorting_rate<0 then
-        inputs[rates.name] = { type = rates.type, count = -sorting_rate }
+        inputs[rates.name] = { type = rates.type, count = -math.ceil(sorting_rate) }
       end
       for machine, num in pairs(output.machine_counts) do
         if machines[machine] then machines[machine] = machines[machine] + num else machines[machine] = num end
@@ -97,11 +87,11 @@ function constructor.createRecipe(set, index, player)
     elseif input.rate > 0 then
       -- category = "ingredients"
       sorting_rate = input.rate
-      inputs[rates.name] = { type = rates.type, count = sorting_rate }
+      inputs[rates.name] = { type = rates.type, count = math.ceil(sorting_rate)  }
     else
       -- category = "products"
       sorting_rate = output.rate
-      outputs[rates.name] = { type = rates.type, count = sorting_rate }
+      outputs[rates.name] = { type = rates.type, count = math.floor(sorting_rate) }
       for machine, num in pairs(output.machine_counts) do
         if machines[machine] then machines[machine] = machines[machine] + num else machines[machine] = num end
       end
@@ -127,10 +117,6 @@ function constructor.createRecipe(set, index, player)
   player.cursor_stack.tags = recipe
   return recipe
 end
-
-constructor.events = {
-  [defines.events.on_gui_opened] = on_gui_opened,
-}
 
 gui.add_handlers({
   on_constructor_button_clic = on_constructor_button_click,
