@@ -6,7 +6,7 @@ Create a factory from RateCalculator. In purpose of saving FPS/UPS in GIGA Facto
 
 [Download on the Mod Portal.](https://mods.factorio.com/mod/Factor-y)
 
-I recommand to install the optional librairy : [TagViewer] (https://mods.factorio.com/mod/TagViewer)
+I recommand to install the optional librairy : [TagViewer](https://mods.factorio.com/mod/TagViewer)
 
 ## Usage
 
