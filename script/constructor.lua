@@ -25,7 +25,7 @@ local function on_constructor_button_click(e)
         local selected_index = guiData.selected_set_index
         local set = guiData.sets[selected_index]
         local recipe = constructor.createRecipe(set, selected_index, game.players[e.player_index])
-        game.write_file("set.json", game.table_to_json(set))
+        --game.write_file("set.json", game.table_to_json(set))
       end
     end
   end
@@ -54,7 +54,6 @@ function constructor.createRecipe(set, index, player)
 
   local inputs = {}
   local outputs = {}
-  local intermediates = {}
   local machines = {}
   local energy = 0
   local polution = 0

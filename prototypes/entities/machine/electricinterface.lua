@@ -8,16 +8,17 @@ data:extend({
         type = "recipe",
         name = "lihop-machine-electric-interface",
         energy_required = 4,
-        enabled = true,
+        enabled = false,
         ingredients =
         {
-            { "concrete",         100 },
-            { "steel-plate",      50 },
+            { "concrete",         1000 },
+            { "steel-plate",      100 },
             { "advanced-circuit", 100 },
-            { "radar",            5 },
-            { "roboport",         2 }
+            { "assembling-machine-3",50 },
         },
         result = "lihop-machine-electric-interface",
+        subgroup = "production-machine",
+        order = "c[assembling-machine-4]",
         requester_paste_multiplier = 10
     },
     {
@@ -27,8 +28,8 @@ data:extend({
         icon_size = 64,
         icon_mipmaps = 4,
         place_result = "lihop-machine-electric-interface",
-        subgroup = "logistic-network",
-        order = "d",
+        subgroup = "production-machine",
+        order = "c[assembling-machine-4]",
         stack_size = 1
     },
     {
@@ -42,14 +43,14 @@ data:extend({
         max_health = 1000,
         corpse = "big-remnants",
         dying_explosion = "nuclear-reactor-explosion",
-        subgroup = "other",
+        subgroup = "production-machine",
+        order = "c[assembling-machine-4]",
         is_military_target=true,
         collision_box = { { -10.4, -4.4 }, { 10.4, 4.4 } },
         selection_box = { { -10.5, -4.5 }, { 10.5, 4.5 } },
         selection_priority = 50,
         damaged_trigger_effect = hit_effects.entity(),
         gui_mode = "none",
-        allow_copy_paste = true,
         energy_source =
         {
             type = "electric",

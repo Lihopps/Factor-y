@@ -61,7 +61,17 @@ end
 
 --- @param e EventData.on_gui_click
 local function on_requestinput_button_click(e)
-    local multiplier=2
+    local multiplier=1
+    if e.element then
+        if e.element.parent then
+            if e.element.parent.recipe_multipler then
+                if e.element.parent.recipe_multipler.text ~="" then
+                    multiplier=e.element.parent.recipe_multipler.text
+                end
+            end
+        end
+    end
+    game.print(multiplier)
     local unit_number=e.element.tags.number
     local recipe=global.machine[unit_number].recipe
     local inputchest=global.machine[unit_number].inputchest
@@ -194,12 +204,13 @@ local function getNumberItem(name, obj, unit_number, type)
     return 0
 end
 
-local function action_button(name,unit_number, tooltip, handler)
+local function action_button(name,unit_number,caption, tooltip, handler)
     return {
         type = "button",
         name = name,
         --style = "frame_action_button",
         tooltip = tooltip,
+        caption=caption,
         mouse_button_filter = { "left" },
         tags={number=unit_number},
         handler = { [defines.events.on_gui_click] = handler },
@@ -660,9 +671,20 @@ function machine.create_gui(player, unit_number)
                         type = "flow",
                         direction = "horizontal",
                         style_mods = { margin = 7 },
-                        action_button("requestmachine_button",unit_number, { "gui.requestmachine" },
+                        name="button_flow",
+                        action_button("requestmachine_button",unit_number, { "gui.requestmachine" },{ "gui.requestmachine_t" },
                             on_requestmachine_button_click),
-                        action_button("requestinput_button",unit_number, { "gui.requestinput" }, on_requestinput_button_click),
+                        action_button("requestinput_button",unit_number, { "gui.requestinput" },{ "gui.requestinput_t" }, on_requestinput_button_click),
+                        {
+                            type="textfield",
+                            name="recipe_multipler",
+                            tooltip={"gui.recipe_multipler"},
+                            numeric=true,
+                            allow_decimal=true,
+                            text=settings.get_player_settings(player)["lihop-multiplier-recipe"].value,
+                            style_mods = { maximal_width = 50,horizontal_align="center" },
+
+                        }
                     },
 
                     {
