@@ -76,12 +76,16 @@ function constructor.createRecipe(set, index, player)
       goto continue
     end
 
+    if string.match(path, "dummy") then
+      goto continue --on ne veut des items cacher // on ajoutera les catcher ici pour la compat des mods
+    end
+
     local sorting_rate = 0
     if output.rate > 0 and input.rate > 0 then
       -- category = "intermediates"
       sorting_rate = output.rate - input.rate
       if sorting_rate>0 then
-        outputs[rates.name] = { type = rates.type, count = math.floor(sorting_rate) }
+        --outputs[rates.name] = { type = rates.type, count = math.floor(sorting_rate) }
       elseif sorting_rate<0 then
         inputs[rates.name] = { type = rates.type, count = -math.ceil(sorting_rate) }
       end
@@ -119,6 +123,10 @@ function constructor.createRecipe(set, index, player)
   }
   player.cursor_stack.set_stack({ name = "lihop-factoryrecipe", count = 1 })
   player.cursor_stack.tags = recipe
+
+  game.write_file("set.json", game.table_to_json(set))
+  game.write_file("recipe.json", game.table_to_json(recipe))
+
   return recipe
 end
 
