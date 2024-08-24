@@ -43,48 +43,48 @@ end
 
 --- @param e EventData.on_gui_click
 local function on_requestmachine_button_click(e)
-    local unit_number=e.element.tags.number
-    local recipe=global.machine[unit_number].recipe
-    local recipechest=global.machine[unit_number].recipechest
+    local unit_number = e.element.tags.number
+    local recipe = global.machine[unit_number].recipe
+    local recipechest = global.machine[unit_number].recipechest
     if not recipechest or not recipechest.valid then return end
-    for i=1,recipechest.request_slot_count do
+    for i = 1, recipechest.request_slot_count do
         recipechest.clear_request_slot(i)
     end
     if recipe["machines"] then
-        local slot=1
-        for name,count in pairs(recipe["machines"]) do
-            recipechest.set_request_slot({name=name,count=count}, slot)
-            slot=slot+1
+        local slot = 1
+        for name, count in pairs(recipe["machines"]) do
+            recipechest.set_request_slot({ name = name, count = count }, slot)
+            slot = slot + 1
         end
     end
 end
 
 --- @param e EventData.on_gui_click
 local function on_requestinput_button_click(e)
-    local multiplier=1
+    local multiplier = 1
     if e.element then
         if e.element.parent then
             if e.element.parent.recipe_multipler then
-                if e.element.parent.recipe_multipler.text ~="" then
-                    multiplier=e.element.parent.recipe_multipler.text
+                if e.element.parent.recipe_multipler.text ~= "" then
+                    multiplier = e.element.parent.recipe_multipler.text
                 end
             end
         end
     end
-    game.print(multiplier)
-    local unit_number=e.element.tags.number
-    local recipe=global.machine[unit_number].recipe
-    local inputchest=global.machine[unit_number].inputchest
+    --game.print(multiplier)
+    local unit_number = e.element.tags.number
+    local recipe = global.machine[unit_number].recipe
+    local inputchest = global.machine[unit_number].inputchest
     if not inputchest or not inputchest.valid then return end
-    for i=1,inputchest.request_slot_count do
+    for i = 1, inputchest.request_slot_count do
         inputchest.clear_request_slot(i)
     end
     if recipe["inputs"] then
-        local slot=1
-        for name,obj in pairs(recipe["inputs"]) do
-            if obj.type=="item" then
-                inputchest.set_request_slot({name=name,count=math.ceil(obj.count)*multiplier}, slot)
-                slot=slot+1
+        local slot = 1
+        for name, obj in pairs(recipe["inputs"]) do
+            if obj.type == "item" then
+                inputchest.set_request_slot({ name = name, count = math.ceil(obj.count) * multiplier }, slot)
+                slot = slot + 1
             end
         end
     end
@@ -204,15 +204,15 @@ local function getNumberItem(name, obj, unit_number, type)
     return 0
 end
 
-local function action_button(name,unit_number,caption, tooltip, handler)
+local function action_button(name, unit_number, caption, tooltip, handler)
     return {
         type = "button",
         name = name,
         --style = "frame_action_button",
         tooltip = tooltip,
-        caption=caption,
+        caption = caption,
         mouse_button_filter = { "left" },
-        tags={number=unit_number},
+        tags = { number = unit_number },
         handler = { [defines.events.on_gui_click] = handler },
 
     }
@@ -537,7 +537,6 @@ function machine.destroy(entity)
         end
     end
 
-
     global.machine_index[global.machine[entity.unit_number].index] = nil
     global.machine[entity.unit_number] = nil
 end
@@ -550,10 +549,8 @@ function machine.update(unit_number)
     local outputchest = global.machine[unit_number].outputchest
     local inputs_tank = global.machine[unit_number].inputs_tank
     local outputs_tank = global.machine[unit_number].outputs_tank
-    local errors = global.machine[unit_number].errors
-    if not errors then
+    if not global.machine[unit_number].errors then
         global.machine[unit_number].errors = {}
-        errors = global.machine[unit_number].errors
     end
 
     if electric and recipechest and inputchest and outputchest then
@@ -567,44 +564,52 @@ function machine.update(unit_number)
                     electric.power_usage = recipe.tags["energy"]
                     if electric.energy == electric.electric_buffer_size then
                         if allMachine(recipe.tags["machines"], contentrecipe) then
+                            global.machine[unit_number].errors["missingMachine"] = nil
                             if allinput(recipe.tags["inputs"], inputchest, inputs_tank) then
                                 removeall(recipe.tags["inputs"], inputchest, inputs_tank)
-                                addin(recipe.tags["outputs"], outputchest, outputs_tank, errors)
-                                if errors then errors = {} end
+                                if global.machine[unit_number].errors then global.machine[unit_number].errors = {} end
+                                addin(recipe.tags["outputs"], outputchest, outputs_tank,
+                                    global.machine[unit_number].errors)
+                                electric.surface.pollute(electric.position, recipe.tags["polution"])
                             end
-                            errors["missingMachine"] = nil
                         else
-                            util.add_errors(errors, "missingMachine")
+                            util.add_errors(global.machine[unit_number].errors, "missingMachine")
                         end
-                        errors["energy"] = nil
+                        global.machine[unit_number].errors["energy"] = nil
                     else
-                        util.add_errors(errors, "energy")
+                        util.add_errors(global.machine[unit_number].errors, "energy")
                     end
                 end
-                errors["noRecipe"] = nil
-                errors["moreRecipe"] = nil
+                global.machine[unit_number].errors["noRecipe"] = nil
+                global.machine[unit_number].errors["moreRecipe"] = nil
             else
                 global.machine[unit_number].recipe = {}
                 electric.electric_buffer_size = 100000 / 60
                 electric.power_usage = 100000
                 if contentrecipe["lihop-factoryrecipe"] == 0 or not next(contentrecipe) or not contentrecipe["lihop-factoryrecipe"] then
-                    errors["moreRecipe"] = nil
-                    util.add_errors(errors, "noRecipe")
+                    global.machine[unit_number].errors["moreRecipe"] = nil
+                    util.add_errors(global.machine[unit_number].errors, "noRecipe")
                 elseif contentrecipe["lihop-factoryrecipe"] > 1 then
-                    errors["noRecipe"] = nil
-                    util.add_errors(errors, "moreRecipe")
+                    global.machine[unit_number].errors["noRecipe"] = nil
+                    util.add_errors(global.machine[unit_number].errors, "moreRecipe")
                 end
             end
-            errors["invalideEntity"] = nil
+            if outputchest.get_inventory(defines.inventory.chest).is_full() then
+                util.add_errors(global.machine[unit_number].errors, "output_full")
+            else
+                global.machine[unit_number].errors["output_full"] = nil
+            end
+            global.machine[unit_number].errors["invalideEntity"] = nil
         else
-            util.add_errors(errors, "invalideEntity")
+            util.add_errors(global.machine[unit_number].errors, "invalideEntity")
         end
-        errors["missingEntity"] = nil
+        global.machine[unit_number].errors["missingEntity"] = nil
     else
-        util.add_errors(errors, "missingEntity")
+        util.add_errors(global.machine[unit_number].errors, "missingEntity")
     end
-    if next(errors) then
-        util.entity_flying_text(electric, util.make_caption_errors(errors), { r = 1, g = 0, b = 0 }, nil)
+    if next(global.machine[unit_number].errors) then
+        util.entity_flying_text(electric, util.make_caption_errors(global.machine[unit_number].errors),
+            { r = 1, g = 0, b = 0 }, nil)
     end
 end
 
@@ -671,18 +676,20 @@ function machine.create_gui(player, unit_number)
                         type = "flow",
                         direction = "horizontal",
                         style_mods = { margin = 7 },
-                        name="button_flow",
-                        action_button("requestmachine_button",unit_number, { "gui.requestmachine" },{ "gui.requestmachine_t" },
+                        name = "button_flow",
+                        action_button("requestmachine_button", unit_number, { "gui.requestmachine" },
+                            { "gui.requestmachine_t" },
                             on_requestmachine_button_click),
-                        action_button("requestinput_button",unit_number, { "gui.requestinput" },{ "gui.requestinput_t" }, on_requestinput_button_click),
+                        action_button("requestinput_button", unit_number, { "gui.requestinput" },
+                            { "gui.requestinput_t" }, on_requestinput_button_click),
                         {
-                            type="textfield",
-                            name="recipe_multipler",
-                            tooltip={"gui.recipe_multipler"},
-                            numeric=true,
-                            allow_decimal=true,
-                            text=settings.get_player_settings(player)["lihop-multiplier-recipe"].value,
-                            style_mods = { maximal_width = 50,horizontal_align="center" },
+                            type = "textfield",
+                            name = "recipe_multipler",
+                            tooltip = { "gui.recipe_multipler" },
+                            numeric = true,
+                            allow_decimal = true,
+                            text = settings.get_player_settings(player)["lihop-multiplier-recipe"].value,
+                            style_mods = { maximal_width = 50, horizontal_align = "center" },
 
                         }
                     },
@@ -712,9 +719,9 @@ function machine.create_gui(player, unit_number)
         }
         global.gui[player.index] = self
         machine.update_gui(self)
-        return self
+        --return self
     end
-    return nil
+    --return nil
 end
 
 function machine.update_gui(opened, bool)

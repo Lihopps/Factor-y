@@ -31,13 +31,18 @@ local function on_constructor_button_click(e)
   end
 end
 
+local function build_tooltip()
+  
+  return  { "gui.create-recipe" }
+end
+
 function constructor.build(element)
   if element.children[1].lihop_constructor_button then --already present
     return
   end
   child_index = #element.children[1].children
   gui.add(element.children[1],
-    frame_action_button("lihop_constructor_button", "utility/technology", { "gui.create-recipe" },
+    frame_action_button("lihop_constructor_button", "utility/technology",build_tooltip(),
       on_constructor_button_click))
   element.children[1].swap_children(child_index, child_index + 1)
 end
