@@ -375,7 +375,7 @@ local function recipegui(unit_number, chooser)
     if chooser then
         if chooser.elem_value then
             divisor = game.entity_prototypes[chooser.elem_value].belt_speed*480
-            game.print(divisor)
+            --game.print(divisor)
         end
     end
     local recipe = global.machine[unit_number].recipe
