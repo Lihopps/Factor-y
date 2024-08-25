@@ -168,13 +168,4 @@ function util.get_bp(recipe)
     return game.table_to_json(bp)
 end
 
-function util.syncset(set_max)
-    local dif=#global.buildings-set_max
-    if dif>0 then
-        for i=1,dif do
-           table.remove(global.buildings, 1)
-        end
-    end
-end
-
 return util

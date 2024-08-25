@@ -2,19 +2,19 @@ local gui = require("__flib__.gui-lite")
 
 local util = require("script.util")
 local machine = require("script.machine")
-local constructor = require("script.constructor")
--- local handler = require("__core__.lualib.event_handler")
--- handler.add_libraries({
--- 	require("__flib__.gui-lite"),
--- 	require("script.machine"),
--- 	require("script.constructor")
--- })
+--local constructor = require("script.constructor")
+local calculation =require("script.calculation")
 
+local handler = require("__core__.lualib.event_handler")
+
+handler.add_libraries({
+  
+  require("script.shortcut"),
+})
 --BOOTSTRAP
 gui.handle_events()
 
 script.on_init(function()
-	if not global.buildings then global.buildings = {} end
 	if not global.machine_index then global.machine_index = {} end
 	if not global.machine then global.machine = {} end
 	if not global.gui then global.gui = {} end
@@ -22,7 +22,6 @@ end)
 
 
 script.on_configuration_changed(function(e)
-	if not global.buildings then global.buildings = {} end
 	if not global.machine_index then global.machine_index = {} end
 	if not global.machine then global.machine = {} end
 	if not global.gui then global.gui = {} end
@@ -155,18 +154,17 @@ end)
 --------------------------------------- Gestion des Gui ------------------------------------------------
 --------------------------------------------------------------------------------------------------------
 script.on_event(defines.events.on_gui_opened, function(e)
-	if e.element then
-		if e.element.name == "rcalc_window" then
-			constructor.build(e.element)
-		end
-	end
+	-- if e.element then
+	-- 	if e.element.name == "rcalc_window" then
+	-- 		constructor.build(e.element)
+	-- 	end
+	-- end
 	if e.entity then
 		if e.entity.name == "lihop-recipechest" then
 			local player = game.players[e.player_index]
 			local elecinterface = e.entity.surface.find_entity("lihop-machine-electric-interface", e.entity.position)
 			if not elecinterface then return end
 			if not player then return end
-			--player.opened = e.entity
 			machine.create_gui(player, elecinterface.unit_number)
 		elseif e.entity.name == "lihop-machine-electric-interface" then
 			local player = game.players[e.player_index]
@@ -174,7 +172,6 @@ script.on_event(defines.events.on_gui_opened, function(e)
 			if not recipechest then return end
 			if not player then return end
 			player.opened = recipechest
-			--create_gui(player, e.entity.unit_number)
 		end
 	end
 end)
@@ -192,7 +189,7 @@ end)
 ------------------------------------------ PLAYER ------------------------------------------------------
 --------------------------------------------------------------------------------------------------------
 script.on_event(defines.events.on_player_selected_area, function(e)
-	if e.item ~= "rcalc-selection-tool" then
+	if e.item ~= "lihop-factoryrecipe-selection-tool" then
 		return
 	end
 	if not next(e.entities) then
@@ -202,49 +199,45 @@ script.on_event(defines.events.on_player_selected_area, function(e)
 	if not player then
 		return
 	end
-	local building = util.construct_table(e.entities)
-	global.buildings[#global.buildings + 1] = building
-	if #global.buildings > 10 then
-		table.remove(global.buildings, 1)
-	end
+	calculation.set_calc_bleuprint(e.entities,player)
 end)
 
-script.on_event(defines.events.on_player_alt_reverse_selected_area, function(e)
-	if e.item ~= "rcalc-selection-tool" then
-		return
-	end
-	if not next(e.entities) then
-		return
-	end
-	local player = game.get_player(e.player_index)
-	if not player then
-		return
-	end
-	local guiData = remote.call("RateCalculator", "getGuidata", e.player_index)
-	if guiData then
-		local selected_index = guiData.selected_set_index
-		if selected_index then
-			util.update_construc_table(global.buildings[selected_index], e.entities, false)
-		end
-	end
-end)
+-- script.on_event(defines.events.on_player_alt_reverse_selected_area, function(e)
+-- 	if e.item ~= "rcalc-selection-tool" then
+-- 		return
+-- 	end
+-- 	if not next(e.entities) then
+-- 		return
+-- 	end
+-- 	local player = game.get_player(e.player_index)
+-- 	if not player then
+-- 		return
+-- 	end
+-- 	local guiData = remote.call("RateCalculator", "getGuidata", e.player_index)
+-- 	if guiData then
+-- 		local selected_index = guiData.selected_set_index
+-- 		if selected_index then
+-- 			util.update_construc_table(global.buildings[selected_index], e.entities, false)
+-- 		end
+-- 	end
+-- end)
 
-script.on_event(defines.events.on_player_alt_selected_area, function(e)
-	if e.item ~= "rcalc-selection-tool" then
-		return
-	end
-	if not next(e.entities) then
-		return
-	end
-	local player = game.get_player(e.player_index)
-	if not player then
-		return
-	end
-	local guiData = remote.call("RateCalculator", "getGuidata", e.player_index)
-	if guiData then
-		local selected_index = guiData.selected_set_index
-		if selected_index then
-			util.update_construc_table(global.buildings[selected_index], e.entities, true)
-		end
-	end
-end)
+-- script.on_event(defines.events.on_player_alt_selected_area, function(e)
+-- 	if e.item ~= "rcalc-selection-tool" then
+-- 		return
+-- 	end
+-- 	if not next(e.entities) then
+-- 		return
+-- 	end
+-- 	local player = game.get_player(e.player_index)
+-- 	if not player then
+-- 		return
+-- 	end
+-- 	local guiData = remote.call("RateCalculator", "getGuidata", e.player_index)
+-- 	if guiData then
+-- 		local selected_index = guiData.selected_set_index
+-- 		if selected_index then
+-- 			util.update_construc_table(global.buildings[selected_index], e.entities, true)
+-- 		end
+-- 	end
+-- end)
