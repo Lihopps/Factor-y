@@ -40,16 +40,15 @@ script.on_event({
 
 end)
 
-script.on_event({ defines.events.on_tick },
-	function(e)
-		local a = (e.tick % 60) + 1
-		if #global.machine_index >= a then
-			for i = a, #global.machine_index, 60 do
-				machine.update(global.machine_index[i])
-				--game.print(global.machine_index[i])
-			end
+script.on_event({ defines.events.on_tick }, function(e)
+	local a = (e.tick % 60) + 1
+	if #global.machine_index >= a then
+		for i = a, #global.machine_index, 60 do
+			machine.update(global.machine_index[i])
+			--game.print(global.machine_index[i])
 		end
-	end)
+	end
+end)
 
 script.on_nth_tick(30, function(e)
 	--updategui if opened

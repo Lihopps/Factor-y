@@ -1,4 +1,5 @@
 local gui = require("__flib__.gui-lite")
+local util =require("script.util")
 local constructor = {}
 
 local function frame_action_button(name, sprite, tooltip, handler)
@@ -24,6 +25,7 @@ local function on_constructor_button_click(e)
       if guiData then
         local selected_index = guiData.selected_set_index
         local set = guiData.sets[selected_index]
+        util.syncset(#guiData.sets)
         local recipe = constructor.createRecipe(set, selected_index, game.players[e.player_index])
         --game.write_file("set.json", game.table_to_json(set))
       end
@@ -121,11 +123,16 @@ function constructor.createRecipe(set, index, player)
     polution = polution
 
   }
-  player.cursor_stack.set_stack({ name = "lihop-factoryrecipe", count = 1 })
-  player.cursor_stack.tags = recipe
 
+  local str2=util.get_bp(recipe)
+  str2="0"..game.encode_string(str2)
+  player.clear_cursor()
+  game.print(player.cursor_stack.import_stack(str2))
+
+
+  local tmp=player.cursor_stack.get_blueprint_entity_tags(1)
   game.write_file("set.json", game.table_to_json(set))
-  game.write_file("recipe.json", game.table_to_json(recipe))
+  game.write_file("recipeT.json", game.table_to_json(tmp))
 
   return recipe
 end

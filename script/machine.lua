@@ -128,11 +128,13 @@ local function allinput(inputs, inputchest, inputs_tank)
         end
     end
     for name, obj in pairs(inputs) do
-        if not contentinput[name] then
-            return false
-        else
-            if contentinput[name] < math.ceil(obj.count) then
+        if obj.count > 0 then
+            if not contentinput[name] then
                 return false
+            else
+                if contentinput[name] < math.ceil(obj.count) then
+                    return false
+                end
             end
         end
     end
@@ -150,10 +152,12 @@ end
 
 local function removeall(inputs, inputchest, inputs_tank)
     for name, obj in pairs(inputs) do
-        if obj.type == "item" then
-            inputchest.get_inventory(defines.inventory.chest).remove({ name = name, count = math.ceil(obj.count) })
-        elseif obj.type == "fluid" then
-            remove_in_tank(name, obj, inputs_tank)
+        if obj.count > 0 then
+            if obj.type == "item" then
+                inputchest.get_inventory(defines.inventory.chest).remove({ name = name, count = math.ceil(obj.count) })
+            elseif obj.type == "fluid" then
+                remove_in_tank(name, obj, inputs_tank)
+            end
         end
     end
 end
@@ -266,7 +270,7 @@ local function makeMachine(recipe, unit_number)
     return flow
 end
 
-local function makeRecipe(recipe, unit_number)
+local function makeRecipe(recipe, unit_number, divisor)
     local gflow =
     {
         type = "flow",
@@ -320,7 +324,8 @@ local function makeRecipe(recipe, unit_number)
                         "=" ..
                         name ..
                         "] x " ..
-                        format.number(realNumber, true, 2) .. " / " .. format.number(math.ceil(obj.count), true, 2),
+                        format.number(realNumber / divisor, true, 2) ..
+                        " / " .. format.number(math.ceil(obj.count) / divisor, true, 2),
                     tooltip = { "", { "?", { "item-name." .. name }, { "entity-name." .. name }, { "fluid-name." .. name } }, " : ", realNumber }
 
                 }
@@ -352,7 +357,8 @@ local function makeRecipe(recipe, unit_number)
                 {
                     type = "label",
                     style = "rcalc_machines_label",
-                    caption = "[" .. obj.type .. "=" .. name .. "] x " .. format.number(math.floor(obj.count), true, 2),
+                    caption = "[" ..
+                    obj.type .. "=" .. name .. "] x " .. format.number(math.floor(obj.count) / divisor, true, 2),
                     tooltip = { "", { "?", { "item-name." .. name }, { "entity-name." .. name }, { "fluid-name." .. name } }, " : ", math.floor(obj.count) }
                 }
             }
@@ -364,18 +370,26 @@ local function makeRecipe(recipe, unit_number)
     return gflow
 end
 
-local function recipegui(unit_number)
+local function recipegui(unit_number, chooser)
+    local divisor = 1
+    if chooser then
+        if chooser.elem_value then
+            divisor = game.entity_prototypes[chooser.elem_value].belt_speed*480
+            game.print(divisor)
+        end
+    end
     local recipe = global.machine[unit_number].recipe
     local flow = {
         type = "flow",
         direction = "horizontal",
         name = "recipegui",
+        style_mods = { horizontally_squashable = true },
         children = {}
     }
     if next(recipe) ~= nil then
         flow.children[1] = makeMachine(recipe, unit_number)
         flow.children[2] = { type = "line", direction = "vertical" }
-        flow.children[3] = makeRecipe(recipe, unit_number)
+        flow.children[3] = makeRecipe(recipe, unit_number, divisor)
         global.machine[unit_number].errors["noRecipe"] = nil
     else
         util.add_errors(global.machine[unit_number].errors, "noRecipe")
@@ -557,27 +571,34 @@ function machine.update(unit_number)
         if electric.valid and recipechest.valid and inputchest.valid and outputchest.valid then
             local contentrecipe = recipechest.get_inventory(defines.inventory.chest).get_contents()
             if contentrecipe["lihop-factoryrecipe"] == 1 then
-                local recipe = recipechest.get_inventory(defines.inventory.chest).find_item_stack("lihop-factoryrecipe")
-                if recipe then
-                    global.machine[unit_number].recipe = recipe.tags
-                    electric.electric_buffer_size = recipe.tags["energy"] / 60
-                    electric.power_usage = recipe.tags["energy"]
-                    if electric.energy == electric.electric_buffer_size then
-                        if allMachine(recipe.tags["machines"], contentrecipe) then
-                            global.machine[unit_number].errors["missingMachine"] = nil
-                            if allinput(recipe.tags["inputs"], inputchest, inputs_tank) then
-                                removeall(recipe.tags["inputs"], inputchest, inputs_tank)
-                                if global.machine[unit_number].errors then global.machine[unit_number].errors = {} end
-                                addin(recipe.tags["outputs"], outputchest, outputs_tank,
-                                    global.machine[unit_number].errors)
-                                electric.surface.pollute(electric.position, recipe.tags["polution"])
+                local recipe_item = recipechest.get_inventory(defines.inventory.chest).find_item_stack(
+                    "lihop-factoryrecipe")
+                if recipe_item then
+                    local recipe = recipe_item.get_blueprint_entity_tags(1)
+                    if next(recipe) then
+                        global.machine[unit_number].errors["bp_probleme"] = nil
+                        global.machine[unit_number].recipe = recipe
+                        electric.electric_buffer_size = recipe["energy"] / 60
+                        electric.power_usage = recipe["energy"]
+                        if electric.energy == electric.electric_buffer_size then
+                            if allMachine(recipe["machines"], contentrecipe) then
+                                global.machine[unit_number].errors["missingMachine"] = nil
+                                if allinput(recipe["inputs"], inputchest, inputs_tank) then
+                                    removeall(recipe["inputs"], inputchest, inputs_tank)
+                                    if global.machine[unit_number].errors then global.machine[unit_number].errors = {} end
+                                    addin(recipe["outputs"], outputchest, outputs_tank,
+                                        global.machine[unit_number].errors)
+                                    electric.surface.pollute(electric.position, recipe["polution"])
+                                end
+                            else
+                                util.add_errors(global.machine[unit_number].errors, "missingMachine")
                             end
+                            global.machine[unit_number].errors["energy"] = nil
                         else
-                            util.add_errors(global.machine[unit_number].errors, "missingMachine")
+                            util.add_errors(global.machine[unit_number].errors, "energy")
                         end
-                        global.machine[unit_number].errors["energy"] = nil
                     else
-                        util.add_errors(global.machine[unit_number].errors, "energy")
+                        util.add_errors(global.machine[unit_number].errors, "bp_probleme")
                     end
                 end
                 global.machine[unit_number].errors["noRecipe"] = nil
@@ -675,7 +696,7 @@ function machine.create_gui(player, unit_number)
                     {
                         type = "flow",
                         direction = "horizontal",
-                        style_mods = { margin = 7 },
+                        style_mods = { margin = 7, vertical_align = "center" },
                         name = "button_flow",
                         action_button("requestmachine_button", unit_number, { "gui.requestmachine" },
                             { "gui.requestmachine_t" },
@@ -691,7 +712,15 @@ function machine.create_gui(player, unit_number)
                             text = settings.get_player_settings(player)["lihop-multiplier-recipe"].value,
                             style_mods = { maximal_width = 50, horizontal_align = "center" },
 
-                        }
+                        },
+                        {
+                            type = "choose-elem-button",
+                            name = "timescale_divisor",
+                            elem_type = "entity",
+                            elem_filters = { { filter = "type", type = "transport-belt" }, { filter = "hidden", invert = true, mode = "and" } },
+                            tooltip = { "gui.rcalc-capacity-divisor-description" },
+                            --handler = { [defines.events.on_gui_elem_changed] = on_divisor_elem_changed },
+                        },
                     },
 
                     {
@@ -705,8 +734,8 @@ function machine.create_gui(player, unit_number)
                         type = "scroll-pane",
                         direction = "horizontal",
                         name = "scrollRecipe",
-                        style_mods = { margin = 7 },
-                        recipegui(unit_number),
+                        style_mods = { margin = 7, horizontally_squashable = true, horizontally_stretchable = true },
+                        recipegui(unit_number, nil),
                     }
                 }
             })
@@ -737,7 +766,7 @@ function machine.update_gui(opened, bool)
     if bool then
         opened.elems.scrollRecipe.clear()
         make_errors_flow(opened.elems.errorflow, global.machine[opened.unit_number].errors)
-        gui.add(opened.elems.scrollRecipe, recipegui(opened.unit_number))
+        gui.add(opened.elems.scrollRecipe, recipegui(opened.unit_number, opened.elems.timescale_divisor))
     end
 end
 
