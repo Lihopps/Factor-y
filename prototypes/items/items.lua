@@ -3,6 +3,7 @@ local type_filters = {
   "beacon",
   "furnace",
   "rocket-silo",
+  "boiler",
 }
 
 data:extend({

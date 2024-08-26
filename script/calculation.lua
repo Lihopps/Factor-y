@@ -45,6 +45,16 @@ local function rate_calc(set)
     return rset
 end
 
+local function get_fluid(fluidbox, index)
+  local fluid = fluidbox.get_filter(index)
+  if not fluid then
+    fluid = fluidbox[index] --[[@as FluidBoxFilter?]]
+  end
+  if fluid then
+    return game.fluid_prototypes[fluid.name]
+  end
+end
+
 local function process_intermediate(set)
     for name, count in pairs(set.products) do
         if set.ingredients[name] then
@@ -235,8 +245,45 @@ local function process_beacon(set, entity)
             end
         end
     end
+    return 0
 end
 
+local function process_boiler(set, entity)
+  local entity_prototype = entity.prototype
+  local fluidbox = entity.fluidbox
+
+  local input_fluid = get_fluid(fluidbox, 1)
+  if not input_fluid then
+    return
+  end
+
+  local minimum_temperature = fluidbox.get_prototype(1).minimum_temperature or input_fluid.default_temperature
+  local energy_per_amount = (entity_prototype.target_temperature - minimum_temperature) * input_fluid.heat_capacity
+  local fluid_usage = entity_prototype.max_energy_usage / energy_per_amount * 60
+  
+  calc_util.add_rate(set, "input", "fluid", input_fluid.name, fluid_usage, invert, entity.name)
+
+  if entity_prototype.boiler_mode == "heat-water-inside" then
+    calc_util.add_rate(
+      set,
+      "output",
+      "fluid",
+      input_fluid.name,
+      fluid_usage,
+      invert,
+      entity.name,
+      input_fluid.max_temperature
+    )
+    return
+  end
+
+  local output_fluid = get_fluid(fluidbox, 2)
+  if not output_fluid then
+    return
+  end
+
+  calc_util.add_rate(set, "output", "fluid", output_fluid.name, fluid_usage, invert, entity.name)
+end
 local function createRecipe(set)
     --game.write_file("set.json", game.table_to_json(set))
     --Structure of recipe
@@ -257,7 +304,7 @@ local function createRecipe(set)
             energy = input.rate - output.rate
             goto continue
         elseif path == "item/rcalc-pollution-dummy" then
-            polution = output.rate
+            polution = input.rate-output.rate
             goto continue
         elseif path == "item/rcalc-heat-dummy" then
             goto continue
@@ -310,9 +357,8 @@ local function make_recipe(entities)
     local set = {
         machines = {},
         recipe = {},
-        ingredients = {},
-        products = {},
-        level_max = 0,
+        energy=0,
+        polution=0
     }
     for _, entity in pairs(entities) do
         if entity_blacklist[entity.name] then
@@ -329,6 +375,8 @@ local function make_recipe(entities)
             emissions_per_second = process_crafter(set, entity, emissions_per_second)
         elseif type == "beacon" then
             emissions_per_second = process_beacon(set, entity)
+        elseif type == "boiler" then
+            process_boiler(set, entity)
         end
 
         process_emission(set, emissions_per_second)

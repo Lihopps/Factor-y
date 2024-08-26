@@ -145,7 +145,7 @@ function util.get_bp(recipe)
 
     local bp = {
         blueprint = {
-            description = "",
+            description = "AUTO GENERATE BLEUPRINT\nDO NOT DELETE ENTITY OR RE-SELECT IT\nYou can safely :\n-Change Icons\n-Change name\n-Duplicate\n-Delete",
             icons = icons,
             entities = {
                 {
