@@ -168,4 +168,19 @@ function util.get_bp(recipe)
     return game.table_to_json(bp)
 end
 
+function util.rounded(a)
+    if a>=0 then
+        return math.floor(a+0.5)
+    else
+        return math.floor(-a+0.5)
+    end
+end
+
+function util.round(num, dp)
+    local c=2^52+2^51
+    local mult = 10^(dp or 0)
+
+    return ((num*mult+c)-c)/mult
+end
+
 return util

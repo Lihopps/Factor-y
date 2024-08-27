@@ -557,6 +557,7 @@ end
 
 function machine.update(unit_number)
     if not unit_number then return end
+    if not global.machine[unit_number] then return end
     local electric = global.machine[unit_number].electric
     local recipechest = global.machine[unit_number].recipechest
     local inputchest = global.machine[unit_number].inputchest
@@ -755,6 +756,7 @@ end
 
 function machine.update_gui(opened, bool)
     --update power
+    if not global.machine[opened.unit_number] then return end
     local electric = global.machine[opened.unit_number].electric
     opened.elems.power.children[4].caption = format.number(electric.power_usage, true, 3) .. "W"
     if electric.electric_buffer_size > 0 then
