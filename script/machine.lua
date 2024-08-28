@@ -1,5 +1,6 @@
 local gui = require("__flib__.gui-lite")
 local format = require("__flib__.format")
+local flib_math = require("__flib__.math")
 local util = require("script.util")
 
 --global.machine_index
@@ -271,6 +272,7 @@ local function makeMachine(recipe, unit_number)
 end
 
 local function makeRecipe(recipe, unit_number, divisor)
+    local precision=0.01
     local gflow =
     {
         type = "flow",
@@ -306,32 +308,29 @@ local function makeRecipe(recipe, unit_number, divisor)
     for name, obj in pairs(recipe.inputs) do
         local realNumber = getNumberItem(name, obj, unit_number, "input")
         local color = { 0, 1, 0 }
-        if math.ceil(obj.count) > 0 then
-            if realNumber < math.ceil(obj.count) then
-                color = { 1, 0, 0 }
-            end
-            local sflow =
-            {
-                type = "flow",
-                direction = "horizontal",
-                style_mods = { left_padding = 20 },
-                {
-                    type = "label",
-                    style = "rcalc_machines_label",
-                    style_mods = { font_color = color },
-                    caption = "[" ..
-                        obj.type ..
-                        "=" ..
-                        name ..
-                        "] x " ..
-                        format.number(realNumber / divisor, true, 2) ..
-                        " / " .. format.number(math.ceil(obj.count) / divisor, true, 2),
-                    tooltip = { "", { "?", { "item-name." .. name }, { "entity-name." .. name }, { "fluid-name." .. name } }, " : ", realNumber }
-
-                }
-            }
-            inputs_flow.children[#inputs_flow.children + 1] = sflow
+        if realNumber < math.ceil(obj.count) then
+            color = { 1, 0, 0 }
         end
+        local sflow =
+        {
+            type = "flow",
+            direction = "horizontal",
+            style_mods = { left_padding = 20 },
+            {
+                type = "label",
+                style = "rcalc_machines_label",
+                style_mods = { font_color = color },
+                caption = "[" ..
+                    obj.type ..
+                    "=" ..
+                    name ..
+                    "] x " ..format.number(flib_math.round(realNumber / divisor, precision),true,4)..
+                    " / " .. format.number(flib_math.round(math.ceil(obj.count) / divisor, precision),true,4),
+                tooltip = { "", { "?", { "item-name." .. name }, { "entity-name." .. name }, { "fluid-name." .. name } }, " : ", format.number(flib_math.round(realNumber / divisor, precision),true,4),"\n",{"gui.conso"}," : ",format.number(flib_math.round(obj.real_count / divisor, precision*precision),true,4) }
+
+            }
+        }
+        inputs_flow.children[#inputs_flow.children + 1] = sflow
     end
     flow.children[#flow.children + 1] = inputs_flow
     flow.children[#flow.children + 1] = { type = "line", direction = "vertical" }
@@ -348,7 +347,6 @@ local function makeRecipe(recipe, unit_number, divisor)
         }
     }
     for name, obj in pairs(recipe.outputs) do
-        if math.floor(obj.count) > 0 then
             local sflow =
             {
                 type = "flow",
@@ -358,12 +356,11 @@ local function makeRecipe(recipe, unit_number, divisor)
                     type = "label",
                     style = "rcalc_machines_label",
                     caption = "[" ..
-                    obj.type .. "=" .. name .. "] x " .. format.number(math.floor(obj.count) / divisor, true, 2),
-                    tooltip = { "", { "?", { "item-name." .. name }, { "entity-name." .. name }, { "fluid-name." .. name } }, " : ", math.floor(obj.count) }
+                        obj.type .. "=" .. name .. "] x " .. format.number(flib_math.round(obj.count/divisor,precision),true,4),
+                    tooltip = { "", { "?", { "item-name." .. name }, { "entity-name." .. name }, { "fluid-name." .. name } }, " : ", format.number(flib_math.round(math.floor(obj.count) / divisor, precision),true,4),"\n",{"gui.prod"}," : ",format.number(flib_math.round(obj.real_count / divisor, precision*precision),true,4) }
                 }
             }
             outputs_flow.children[#outputs_flow.children + 1] = sflow
-        end
     end
     flow.children[#flow.children + 1] = outputs_flow
     gflow.children[#gflow.children + 1] = flow
@@ -374,7 +371,7 @@ local function recipegui(unit_number, chooser)
     local divisor = 1
     if chooser then
         if chooser.elem_value then
-            divisor = game.entity_prototypes[chooser.elem_value].belt_speed*480
+            divisor = game.entity_prototypes[chooser.elem_value].belt_speed * 480
             --game.print(divisor)
         end
     end
@@ -477,17 +474,17 @@ end
 function machine.destroy_by_player(entity, player)
     local tot = 0
     if util.test_entity(global.machine[entity.unit_number].recipechest) then
-        if util.insert(global.machine[entity.unit_number].recipechest, player) then
+        if util.insert_stack(global.machine[entity.unit_number].recipechest, player) then
             tot = tot + 1
         end
     end
     if util.test_entity(global.machine[entity.unit_number].inputchest) then
-        if util.insert(global.machine[entity.unit_number].inputchest, player) then
+        if util.insert_stack(global.machine[entity.unit_number].inputchest, player) then
             tot = tot + 1
         end
     end
     if util.test_entity(global.machine[entity.unit_number].outputchest) then
-        if util.insert(global.machine[entity.unit_number].outputchest, player) then
+        if util.insert_stack(global.machine[entity.unit_number].outputchest, player) then
             tot = tot + 1
         end
     end

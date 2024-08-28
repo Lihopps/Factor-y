@@ -1,33 +1,23 @@
+local icon = {
+  filename = "__Factor-y__/graphics/items/factor-y-tool.png",
+  size = 32,
+  mipmap_count = 2,
+  flags = { "gui-icon" },
+}
+
 data:extend({
   {
     type = "shortcut",
     name = "factor-y-get-selection-tool",
-    order = "d[tools]-r[rate-calculator]",
-    icon = {
-      filename = "__RateCalculator-Lf__/graphics/shortcut-x32-black.png",
-      size = 32,
-      mipmap_count = 2,
-      flags = { "gui-icon" },
-    },
-    disabled_icon = {
-      filename = "__RateCalculator-Lf__/graphics/shortcut-x32-white.png",
-      size = 32,
-      mipmap_count = 2,
-      flags = { "gui-icon" },
-    },
-    small_icon = {
-      filename = "__RateCalculator-Lf__/graphics/shortcut-x24-black.png",
-      size = 24,
-      mipmap_count = 2,
-      flags = { "gui-icon" },
-    },
-    disabled_small_icon = {
-      filename = "__RateCalculator-Lf__/graphics/shortcut-x24-white.png",
-      size = 24,
-      mipmap_count = 2,
-      flags = { "gui-icon" },
-    },
+    order = "d[tools]-r[factor-y]",
+    icon = icon,
     action = "lua",
     associated_control_input = "factor-y-get-selection-tool",
+  },
+  {
+    type = "custom-input",
+    name = "factor-y-get-selection-tool",
+    key_sequence = "ALT + M",
+    action = "lua",
   },
 })

@@ -1,17 +1,7 @@
-local gui = require("__flib__.gui-lite")
-
 local util = require("script.util")
 local machine = require("script.machine")
 local calculation =require("script.calculation")
 
---local handler = require("__core__.lualib.event_handler")
-
---handler.add_libraries({
-  
-  --require("script.shortcut"),
---})
---BOOTSTRAP
---gui.handle_events()
 
 script.on_init(function()
 	if not global.machine_index then global.machine_index = {} end
@@ -153,11 +143,6 @@ end)
 --------------------------------------- Gestion des Gui ------------------------------------------------
 --------------------------------------------------------------------------------------------------------
 script.on_event(defines.events.on_gui_opened, function(e)
-	-- if e.element then
-	-- 	if e.element.name == "rcalc_window" then
-	-- 		constructor.build(e.element)
-	-- 	end
-	-- end
 	if e.entity then
 		if e.entity.name == "lihop-recipechest" then
 			local player = game.players[e.player_index]
@@ -204,7 +189,7 @@ end)
 script.on_event(
 	{
 		defines.events.on_lua_shortcut,
-		defines.events.CustomInputEvent,
+		"factor-y-get-selection-tool",
 	}, function(e)
 	local name = e.input_name or e.prototype_name
   	if name ~= "factor-y-get-selection-tool" then

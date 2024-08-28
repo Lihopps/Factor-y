@@ -478,10 +478,10 @@ local function createRecipe(set)
         --     outputs[rates.name] = { type = rates.type, count = util.rounded(sorting_rate) }
         -- end
         if input.rate>0 then
-            inputs[rates.name] = { type = rates.type, count = util.rounded(input.rate) }
+            inputs[rates.name] = { type = rates.type, count = util.rounded(input.rate),real_count=input.rate }
         end
         if output.rate>0 then
-            outputs[rates.name] = { type = rates.type, count = util.rounded(output.rate) }
+            outputs[rates.name] = { type = rates.type, count = util.rounded(output.rate),real_count=output.rate }
         end
 
         ::continue::
