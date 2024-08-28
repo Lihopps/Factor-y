@@ -2,15 +2,14 @@ local gui = require("__flib__.gui-lite")
 
 local util = require("script.util")
 local machine = require("script.machine")
---local constructor = require("script.constructor")
 local calculation =require("script.calculation")
 
-local handler = require("__core__.lualib.event_handler")
+--local handler = require("__core__.lualib.event_handler")
 
-handler.add_libraries({
-	require("__flib__.gui-lite"),
-  	require("script.shortcut"),
-})
+--handler.add_libraries({
+  
+  --require("script.shortcut"),
+--})
 --BOOTSTRAP
 --gui.handle_events()
 
@@ -200,6 +199,26 @@ script.on_event(defines.events.on_player_selected_area, function(e)
 		return
 	end
 	calculation.set_calc_bleuprint(e.entities,player)
+end)
+
+script.on_event(
+	{
+		defines.events.on_lua_shortcut,
+		defines.events.CustomInputEvent,
+	}, function(e)
+	local name = e.input_name or e.prototype_name
+  	if name ~= "factor-y-get-selection-tool" then
+    		return
+  	end
+  	local player = game.get_player(e.player_index)
+  	if not player then
+    		return
+  	end
+  	local cursor_stack = player.cursor_stack
+  	if not cursor_stack or not player.clear_cursor() then
+    		return
+  	end
+  	cursor_stack.set_stack({ name = "lihop-factoryrecipe-selection-tool", count = 1 })
 end)
 
 -- script.on_event(defines.events.on_player_alt_reverse_selected_area, function(e)

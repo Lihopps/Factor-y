@@ -66,6 +66,29 @@ function util.test_entity(entity)
     end
 end
 
+function util.insert_stack(entity,player)
+    local inv = entity.get_inventory(defines.inventory.chest)
+    local player_inv=player.get_main_inventory()
+    if not inv then return false end
+    if not player_inv then return false end
+    inv.sort_and_merge()
+    player_inv.sort_and_merge()
+    if inv.is_full() then return false end
+    if player_inv.is_full() then return false end
+    
+    for i=1,#inv do
+        local item = inv[i]
+        if item.valid_for_read then
+            local first_empty_in_player = player_inv.find_empty_stack()
+            if not first_empty_in_player then return false end
+            if not first_empty_in_player.transfer_stack(item) then
+                return false
+            end
+        end
+    end
+    return true
+end
+
 function util.insert(entity, player)
     local inv = entity.get_inventory(defines.inventory.chest).get_contents()
     for name, count in pairs(inv) do
