@@ -8,11 +8,11 @@ local calculation =require("script.calculation")
 local handler = require("__core__.lualib.event_handler")
 
 handler.add_libraries({
-  
-  require("script.shortcut"),
+	require("__flib__.gui-lite"),
+  	require("script.shortcut"),
 })
 --BOOTSTRAP
-gui.handle_events()
+--gui.handle_events()
 
 script.on_init(function()
 	if not global.machine_index then global.machine_index = {} end
