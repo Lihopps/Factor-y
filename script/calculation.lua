@@ -308,6 +308,7 @@ local function process_crafter(set, entity, emissions_per_second)
     end
     if not recipe then return emissions_per_second end
     addmachine(set, entity)
+    if global.emerg_recipe[recipe.name] then return emissions_per_second end
     local crafts_per_second = entity.crafting_speed / recipe.energy
 
     -- Rocket silos will lose time to the launch animation

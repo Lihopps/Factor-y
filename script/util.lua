@@ -190,4 +190,17 @@ function util.round(num, dp)
     return ((num*mult+c)-c)/mult
 end
 
+function util.recipe_emerg()
+    local recipe_emg={}
+    if settings.global["lihop-prevent-emergence"].value==true then
+        for name,recipe in pairs(game.recipe_prototypes) do
+            if not next(recipe.ingredients) then
+                table.insert(recipe_emg,name)
+            end
+        end
+    end
+    game.write_file("recipe_emg.json",game.table_to_json(recipe_emg))
+    return recipe_emg
+end
+
 return util

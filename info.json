@@ -9,6 +9,7 @@
     "dependencies": [
 	"base >=1.0",
     "flib >= 0.14.2",
+    "RateCalculator >=3.2.7",
     "(?) TagViewer >=1.5.0"
 	],
     "description": "This do something"

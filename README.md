@@ -23,7 +23,7 @@ The custom recipe is inside the newly created blueprint, this item act as the re
             -Change Icons\
             -Change name\
             -Duplicate\
-            -Delete\
+            -Delete
 
 
 ### Know details about recipe

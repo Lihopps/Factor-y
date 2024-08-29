@@ -7,6 +7,8 @@ script.on_init(function()
 	if not global.machine_index then global.machine_index = {} end
 	if not global.machine then global.machine = {} end
 	if not global.gui then global.gui = {} end
+	if not global.emerg_recipe then global.emerg_recipe =util.recipe_emerg() end
+
 end)
 
 
@@ -14,9 +16,17 @@ script.on_configuration_changed(function(e)
 	if not global.machine_index then global.machine_index = {} end
 	if not global.machine then global.machine = {} end
 	if not global.gui then global.gui = {} end
+	global.emerg_recipe =util.recipe_emerg()
 end)
 
-
+script.on_event({
+	defines.events.on_runtime_mod_setting_changed,
+}, function(e)
+	if e.setting=="lihop-prevent-emergence" then
+		global.emerg_recipe=util.recipe_emerg()
+		game.print("coucouc")
+	end
+end)
 --------------------------------------------------------------------------------------------------------
 ------------------------------------------- EVENT Surface -----------------------------------------------
 --------------------------------------------------------------------------------------------------------
