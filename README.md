@@ -1,6 +1,6 @@
 # Factor-y
 
-Create a factory from RateCalculator. In purpose of saving FPS/UPS in GIGA Factory
+Create a one-buildong factory from many entities selected. In purpose of saving FPS/UPS in GIGA Factory
 
 ## Installation
 
