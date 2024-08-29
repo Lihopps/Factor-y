@@ -15,21 +15,21 @@ I recommand to install the optional librairy : [TagViewer](https://mods.factorio
 
 Use the Big Factory recipe maker to create a blueprint with a Big Factory.\
 Select factory you want to minimize.\
-The custom recipe is inside the newly created blueprint, this item act as the recipe of the Big Factory.\
+The custom recipe is inside the newly created blueprint, this item act as the recipe of the Big Factory.
 
-:warning: AUTO GENERATE BLEUPRINT
-      DO NOT DELETE ENTITY OR RE-SELECT IT
-      You can safely :
-            -Change Icons
-            -Change name
-            -Duplicate
-            -Delete
+:warning: AUTO GENERATE BLEUPRINT\
+      DO NOT DELETE ENTITY OR RE-SELECT IT\
+      You can safely :\
+            -Change Icons\
+            -Change name\
+            -Duplicate\
+            -Delete\
 
 
 ### Know details about recipe
 ![](graphics/gui/see_tags.png)
 
-If the TagViewer mod is enabled, you can see the recipe with it.\
+If the TagViewer mod is enabled, you can see the recipe with it.
 
 
 ### Big Factory : Definition
