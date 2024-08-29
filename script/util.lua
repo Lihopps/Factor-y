@@ -89,21 +89,6 @@ function util.insert_stack(entity,player)
     return true
 end
 
-function util.insert(entity, player)
-    local inv = entity.get_inventory(defines.inventory.chest).get_contents()
-    for name, count in pairs(inv) do
-        local tot = player.insert({ name = name, count = count })
-        if tot > 0 then
-            if count ~= entity.get_inventory(defines.inventory.chest).remove({ name = name, count = tot }) then
-                return false
-            end
-        else
-            return false
-        end
-    end
-    return true
-end
-
 function util.insert2(inv, player)
     for name, count in pairs(inv.get_contents()) do
         return player.can_insert({ name = name, count = count })

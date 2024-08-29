@@ -4,7 +4,7 @@
     "title": "Factor-y",
     "author": "lihop",
     "contact": "lihops.game@gmail.com",
-    "homepage": "",
+    "homepage": "https://github.com/Lihopps/Factor-y",
     "factorio_version": "1.1",
     "dependencies": [
 	"base >=1.0",

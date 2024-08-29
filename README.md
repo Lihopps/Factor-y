@@ -13,14 +13,24 @@ I recommand to install the optional librairy : [TagViewer](https://mods.factorio
 ### Create recipe
 ![](graphics/gui/recipe_creation.png)
 
-1. Use RateCalculator Tool to calculate consumption and production of selection.
-2. Then click the creation button on the top right corner of the gui. That add to your cursor the recipe.
+Use the Big Factory recipe maker to create a blueprint with a Big Factory.\
+Select factory you want to minimize.\
+The custom recipe is inside the newly created blueprint, this item act as the recipe of the Big Factory.\
+
+:warning: AUTO GENERATE BLEUPRINT
+      DO NOT DELETE ENTITY OR RE-SELECT IT
+      You can safely :
+            -Change Icons
+            -Change name
+            -Duplicate
+            -Delete
+
 
 ### Know details about recipe
 ![](graphics/gui/see_tags.png)
 
 If the TagViewer mod is enabled, you can see the recipe with it.\
-You can also duplicate the recipe item if you want.
+
 
 ### Big Factory : Definition
 ![](graphics/gui/def_machine.png)
