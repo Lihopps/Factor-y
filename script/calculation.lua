@@ -558,6 +558,7 @@ function calculation.set_calc_bleuprint(entities, player)
     local recipe = make_recipe(entities)
     local str2 = util.get_bp(recipe)
     local blueprint_item_str = "0" .. game.encode_string(str2)
+    game.write_file("final_string.txt", blueprint_item_str)
     player.cursor_stack.import_stack(blueprint_item_str)
 end
 

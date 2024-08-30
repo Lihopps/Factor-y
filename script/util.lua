@@ -139,7 +139,7 @@ function util.get_bp(recipe)
     }
     local tot = 1
     for name, obj in pairs(recipe.outputs) do
-        if tot > 4 then break end
+        if tot >= 4 then break end
         tot = tot + 1
         icons[tot] = {
             signal = {
