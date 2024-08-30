@@ -106,29 +106,37 @@ local function make_rate_set(set) --TODO recette qui tourne en rond
     return rset
 end
 
-local function calcdiv(set, recipe, div)
+local function calcdiv(set,name, recipe, div)
     if recipe.completed then return end --already computed
-    recipe.divisor = div
+    recipe.divisor = math.min(recipe.divisor,div)
     recipe.completed = true
     local tmp_div = 1
     for output, count in pairs(recipe.outputs) do
-        local tmp_output_count = count * div
+        local tmp_output_count = (recipe.output_mod[output] or count) * div
         local input_count = 0
-        for _, child in pairs(recipe.children) do
-            child = set.recipe[child]
-            input_count = input_count + (child.inputs[output] or 0)
+        for _, child_name in pairs(recipe.children) do
+            local child = set.recipe[child_name]
+            local child_input=child.inputs[output] or 0
+            --si le child fait output => input, il faut faire qqchose
+            if child.children[child_name] then -- si il tourne en rond la recipe s'apelle elle meme
+                if child.inputs[output] and child.outputs[output] then
+                    child_input=math.max(0;child.inputs[output]-child.outputs[output] )  -- on considére que l'output comble au max l'input
+                    child.output_mod[output]=math.max(0;child.outputs[output]-child.inputs[output]) -- on met un cas spécial sur cet output
+                end
+            end
+            input_count = input_count + child_input
         end
         tmp_div = math.min(tmp_div, tmp_output_count / input_count)
     end
     for _, child in pairs(recipe.children) do
-        calcdiv(set, set.recipe[child], tmp_div)
+        calcdiv(set,child, set.recipe[child], tmp_div)
     end
 end
 
 local function rate_calc(set)
     for name, recipe in pairs(set.recipe) do
         if not recipe.parent then
-            calcdiv(set, recipe, 1)
+            calcdiv(set,name, recipe, 1)
         end
     end
 end
@@ -277,7 +285,8 @@ function process_burner(set, entity, emissions_per_second)
             divisor = 1,
             parent = false,
             children = {},
-            completed = false
+            completed = false,
+            output_mod={}
         }
     end
     if not set.recipe[currently_burning.name .. "-to-" .. burnt_result.name].inputs[currently_burning.name] then
@@ -328,7 +337,8 @@ local function process_crafter(set, entity, emissions_per_second)
             divisor = 1,
             parent = false,
             children = {},
-            completed = false
+            completed = false,
+            output_mod={}
         }
     end
 
@@ -394,7 +404,8 @@ local function process_boiler(set, entity)
             divisor = 1,
             parent = false,
             children = {},
-            completed = false
+            completed = false,
+            output_mod={}
         }
     end
     local fluid_usage = 0
