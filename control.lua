@@ -1,12 +1,16 @@
+local gui = require("__flib__.gui-lite")
 local util = require("script.util")
 local machine = require("script.machine")
 local calculation =require("script.calculation")
+local inputView =require("script.input_gui")
 
+gui.handle_events()
 
 script.on_init(function()
 	if not global.machine_index then global.machine_index = {} end
 	if not global.machine then global.machine = {} end
 	if not global.gui then global.gui = {} end
+	if not global.lihop_input_gui_state then global.lihop_input_gui_state = {} end
 	if not global.emerg_recipe then global.emerg_recipe =util.recipe_emerg() end
 
 end)
@@ -178,10 +182,23 @@ script.on_event(defines.events.on_gui_closed, function(e)
 			machine.destroy_gui(e.player_index)
 		end
 	end
+	if e.element then
+        if e.element.name == "lihop_input_gui" then
+            inputView.on_gui_closed(e)
+        end
+    end
 end)
+
 --------------------------------------------------------------------------------------------------------
 ------------------------------------------ PLAYER ------------------------------------------------------
 --------------------------------------------------------------------------------------------------------
+script.on_event({
+    defines.events.on_player_created
+}, function(e)
+    local player = game.get_player(e.player_index) --[[@as LuaPlayer]]
+    inputView.build(player)
+end)
+
 script.on_event(defines.events.on_player_selected_area, function(e)
 	if e.item ~= "lihop-factoryrecipe-selection-tool" then
 		return

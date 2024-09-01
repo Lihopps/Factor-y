@@ -3,6 +3,7 @@
 local flib_math = require("__flib__.math")
 local flib_format = require("__flib__.format")
 local util = require("script.util")
+local inputView =require("script.input_gui")
 
 
 local entity_blacklist = {
@@ -29,114 +30,6 @@ local function addmachine(set, entity)
             else
                 set.machines[name] = set.machines[name] + count
             end
-        end
-    end
-end
-
-local function addcalc(rset, category, name, type, count, turn)
-    if not type then
-        if game.fluid_prototypes[name] then
-            type = "fluid"
-        else
-            type = "item"
-        end
-    end
-    if not turn then turn = false end
-    local path = type .. "/" .. name
-    if not rset.rates[path] then
-        rset.rates[path] = { type = type, name = name, turn_round = false, input = { rate = 0 }, output = { rate = 0 } }
-    end
-    rset.rates[path][category].rate = rset.rates[path][category].rate + count
-    rset.rates[path].turn_round = turn
-end
-
-local function make_rate_set(set) --TODO recette qui tourne en rond
-    local rset = { rates = {} }
-    --addcalc(rset, "output", name, "item", count * recipe.divisor)
-    for name_recipe, recipe in pairs(set.recipe) do
-        -- Gestion INPUT
-        if not recipe.parent then --- si il n'a pas de parent on ajoute tous les inputs
-            for name, count in pairs(recipe.inputs) do
-                addcalc(rset, "input", name, nil, count * recipe.divisor)
-            end
-        else --sinon on doit check que chaque input vient ou pas d'une recipe
-            for name, count in pairs(recipe.inputs) do
-                local not_in_recipe=true
-                for other_name, other_recipe in pairs(set.recipe) do
-                    if other_name ~= name_recipe then
-                        if other_recipe.outputs[name] then --il vient d'une autre recipe
-                           not_in_recipe=false
-                        end
-                    end
-                end
-                if not_in_recipe then
-                    addcalc(rset, "input", name, nil, count * recipe.divisor)
-                end
-            end
-        end
-        -- Gestion OUTPUT
-        if not next(recipe.children) then -- si il n'y a pas d'enfant c'est la fin donc on import tout
-            for name, count in pairs(recipe.outputs) do
-                addcalc(rset, "output", name, nil, count * recipe.divisor)
-            end
-        else -- donc il y a des enfants donc on check si l'output est dans un input
-            for name, count in pairs(recipe.outputs) do
-                for _, child_name in pairs(recipe.children) do
-                    if not set.recipe[child_name].inputs[name] or(set.recipe[child_name].inputs[name] and name_recipe==child_name) then
-                        addcalc(rset, "output", name, nil, count * recipe.divisor)
-                        break
-                    end
-                end
-            end
-        end
-    end
-
-
-    if set.energy >= 0 then
-        addcalc(rset, "input", "rcalc-power-dummy", "item", set.energy)
-    else
-        addcalc(rset, "output", "rcalc-power-dummy", "item", set.energy)
-    end
-    if set.polution >= 0 then
-        addcalc(rset, "input", "rcalc-pollution-dummy", "item", set.polution)
-    else
-        addcalc(rset, "output", "rcalc-pollution-dummy", "item", set.polution)
-    end
-    rset.machines = set.machines
-    return rset
-end
-
-local function calcdiv(set,name, recipe, div)
-    if recipe.completed then return end --already computed
-    recipe.divisor = math.min(recipe.divisor,div)
-    recipe.completed = true
-    local tmp_div = 1
-    for output, count in pairs(recipe.outputs) do
-        local tmp_output_count = (recipe.output_mod[output] or count) * div
-        local input_count = 0
-        for _, child_name in pairs(recipe.children) do
-            local child = set.recipe[child_name]
-            local child_input=child.inputs[output] or 0
-            --si le child fait output => input, il faut faire qqchose
-            if child.children[child_name] then -- si il tourne en rond la recipe s'apelle elle meme
-                if child.inputs[output] and child.outputs[output] then
-                    child_input=math.max(0;child.inputs[output]-child.outputs[output] )  -- on considére que l'output comble au max l'input
-                    child.output_mod[output]=math.max(0;child.outputs[output]-child.inputs[output]) -- on met un cas spécial sur cet output
-                end
-            end
-            input_count = input_count + child_input
-        end
-        tmp_div = math.min(tmp_div, tmp_output_count / input_count)
-    end
-    for _, child in pairs(recipe.children) do
-        calcdiv(set,child, set.recipe[child], tmp_div)
-    end
-end
-
-local function rate_calc(set)
-    for name, recipe in pairs(set.recipe) do
-        if not recipe.parent then
-            calcdiv(set,name, recipe, 1)
         end
     end
 end
@@ -175,6 +68,27 @@ local function process_intermediate(set) -- make tree
                     else
                         other_recipe.parent = true
                     end
+                end
+            end
+        end
+    end
+end
+
+local function make_intuitive_input(set)
+    for name, recipe in pairs(set.recipe) do
+        for input_name,input in pairs(recipe.inputs) do
+            if not set.forced_input[input_name] then
+                local bool=false
+                for other_name,other_recipe in pairs(set.recipe) do
+                    if  other_recipe.outputs[input_name] then
+                        bool=true
+                        break
+                    end
+                end
+                if not bool then
+                    set.forced_input[input_name]=true
+                else
+                    set.forced_input[input_name]=false
                 end
             end
         end
@@ -441,75 +355,7 @@ local function process_boiler(set, entity)
     end
 end
 
-local function createRecipe(set)
-    --game.write_file("set.json", game.table_to_json(set))
-    --Structure of recipe
-    --input{}
-    --output{}
-    --machine{}    machine du set + beacon + module
-    --energy
-    --pollution
-    local inputs = {}
-    local outputs = {}
-    local energy = 0
-    local polution = 0
-    for path, rates in pairs(set.rates) do
-        local output = rates.output
-        local input = rates.input
-
-        if path == "item/rcalc-power-dummy" then
-            energy = input.rate - output.rate
-            goto continue
-        elseif path == "item/rcalc-pollution-dummy" then
-            polution = input.rate - output.rate
-            goto continue
-        elseif path == "item/rcalc-heat-dummy" then
-            goto continue
-        end
-
-        if string.match(path, "dummy") then
-            goto continue --on ne veut pas des items cacher // on ajoutera les catcher ici pour la compat des mods
-        end
-
-        -- local sorting_rate = 0
-        -- if output.rate > 0 and input.rate > 0 then
-        --     -- category = "intermediates"
-        --     sorting_rate = output.rate - input.rate
-        --     if sorting_rate > 0 and rates.turn_round then
-        --         outputs[rates.name] = { type = rates.type, count = util.rounded(sorting_rate) }
-        --     elseif sorting_rate < 0 then
-        --         inputs[rates.name] = { type = rates.type, count = util.rounded(sorting_rate) }
-        --     end
-        -- elseif input.rate > 0 then
-        --     -- category = "ingredients"
-        --     sorting_rate = input.rate
-        --     inputs[rates.name] = { type = rates.type, count = util.rounded(sorting_rate) }
-        -- else
-        --     -- category = "products"
-        --     sorting_rate = output.rate
-        --     outputs[rates.name] = { type = rates.type, count = util.rounded(sorting_rate) }
-        -- end
-        if input.rate>0 then
-            inputs[rates.name] = { type = rates.type, count = util.rounded(input.rate),real_count=input.rate }
-        end
-        if output.rate>0 then
-            outputs[rates.name] = { type = rates.type, count = util.rounded(output.rate),real_count=output.rate }
-        end
-
-        ::continue::
-    end
-
-    local recipe = {
-        inputs = inputs,
-        outputs = outputs,
-        machines = set.machines,
-        energy = energy,
-        polution = polution
-
-    }
-    return recipe
-end
-local function make_recipe(entities)
+local function make_recipe(entities,player)
     --   local recipe = {
     --     inputs = inputs,
     --     outputs = outputs,
@@ -521,6 +367,7 @@ local function make_recipe(entities)
     local set = {
         machines = {},
         recipe = {},
+        forced_input={};
         energy = 0,
         polution = 0
     }
@@ -555,22 +402,16 @@ local function make_recipe(entities)
     game.write_file("set1.json", game.table_to_json(set))
     process_intermediate(set) --make tree
     game.write_file("set2.json", game.table_to_json(set))
-    rate_calc(set)
+    make_intuitive_input(set)
     game.write_file("set3.json", game.table_to_json(set))
-    local rate_set = make_rate_set(set)
-    game.write_file("rate_set.json", game.table_to_json(rate_set))
-    local recipe = createRecipe(rate_set)
-    game.write_file("recipe.json", game.table_to_json(recipe))
-    return recipe
+    inputView.update_and_show(set,player)
+    
 end
 
 function calculation.set_calc_bleuprint(entities, player)
     player.cursor_stack.clear()
-    local recipe = make_recipe(entities)
-    local str2 = util.get_bp(recipe)
-    local blueprint_item_str = "0" .. game.encode_string(str2)
-    game.write_file("final_string.txt", blueprint_item_str)
-    player.cursor_stack.import_stack(blueprint_item_str)
+    make_recipe(entities,player)
+    
 end
 
 return calculation

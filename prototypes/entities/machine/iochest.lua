@@ -33,7 +33,7 @@ data:extend({
         icon = "__Factor-y__/graphics/entities/machine/item.png" ,
         icon_size = 64,
         icon_mipmaps = 4,
-        flags = { "placeable-player", "player-creation","not-blueprintable" },
+        flags = { "placeable-player", "player-creation","not-blueprintable","hidden" },
         max_health = 350,
         collision_box = { { -4.40, -4.40 }, { 4.40, 4.40 } },
         selection_box = { { -4.5, -4.5 }, { 4.5, 4.5 } },
