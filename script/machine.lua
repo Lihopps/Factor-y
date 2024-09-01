@@ -91,6 +91,49 @@ local function on_requestinput_button_click(e)
     end
 end
 
+--- @param e EventData.on_gui_click
+local function on_setfilter_button_click(e)
+    local multiplier = 1
+    if e.element then
+        if e.element.parent then
+            if e.element.parent.recipe_multipler then
+                if e.element.parent.recipe_multipler.text ~= "" then
+                    multiplier = e.element.parent.recipe_multipler.text
+                end
+            end
+        end
+    end
+    local unit_number = e.element.tags.number
+    local recipe = global.machine[unit_number].recipe
+    local inputchest = global.machine[unit_number].inputchest
+    if not inputchest or not inputchest.valid then return end
+    local inv=inputchest.get_inventory(defines.inventory.chest)
+    if not inv or not inv.valid then return end
+    local max=#inv
+    for i = 1, max  do
+        inv.set_filter(i,nil)
+    end
+    inv.set_bar()
+    if recipe["inputs"] then
+        local slot = 1
+        for name, obj in pairs(recipe["inputs"]) do
+            if obj.type == "item" then
+                local item=game.item_prototypes[name]
+                local stacksize=item.stack_size
+                local number_of_slot=util.rounded((obj.count/stacksize)*multiplier)
+                for i=1,number_of_slot do
+                    inv.set_filter(slot,name)
+                    slot = slot + 1
+                    if slot>max then
+                        return
+                    end
+                end
+            end
+        end
+        inv.set_bar(slot)
+    end
+end
+
 local function create_tank(tanks_def, entity)
     local tanks = {}
     for _, tank in pairs(tanks_def) do
@@ -699,6 +742,9 @@ function machine.create_gui(player, unit_number)
                         action_button("requestmachine_button", unit_number, { "gui.requestmachine" },
                             { "gui.requestmachine_t" },
                             on_requestmachine_button_click),
+                            action_button("filtermachine_button", unit_number, { "gui.setfilter" },
+                            { "gui.setfilter_t" },
+                            on_setfilter_button_click),
                         action_button("requestinput_button", unit_number, { "gui.requestinput" },
                             { "gui.requestinput_t" }, on_requestinput_button_click),
                         {
@@ -786,6 +832,7 @@ end
 gui.add_handlers({
     on_requestmachine_button_clic = on_requestmachine_button_click,
     on_requestinput_button_clic = on_requestinput_button_click,
+    on_setfilter_button_click = on_setfilter_button_click
 })
 
 return machine

@@ -52,6 +52,7 @@ data:extend({
             }
         },
         fast_replaceable_group = "container",
+        inventory_type="with_filters_and_bar",
         inventory_size = 512,
         logistic_mode = "requester",
         open_sound = { filename = "__base__/sound/metallic-chest-open.ogg", volume = 0.43 },
@@ -77,6 +78,7 @@ data:extend({
 local lihop_iochest_provider = table.deepcopy(data.raw["logistic-container"]["lihop-iochest-requester"])
 lihop_iochest_provider.name="lihop-iochest-provider"
 lihop_iochest_provider.logistic_mode="passive-provider"
+lihop_iochest_provider.inventory_type="with_bar"
 
 local lihop_iochest_provider_item = table.deepcopy(data.raw["item"]["lihop-iochest-requester"])
 lihop_iochest_provider_item.name="lihop-iochest-provider"
