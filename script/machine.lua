@@ -67,7 +67,7 @@ local function on_requestinput_button_click(e)
         if e.element.parent then
             if e.element.parent.recipe_multipler then
                 if e.element.parent.recipe_multipler.text ~= "" then
-                    multiplier = e.element.parent.recipe_multipler.text
+                    multiplier = tonumber(e.element.parent.recipe_multipler.text)
                 end
             end
         end
@@ -98,7 +98,7 @@ local function on_setfilter_button_click(e)
         if e.element.parent then
             if e.element.parent.recipe_multipler then
                 if e.element.parent.recipe_multipler.text ~= "" then
-                    multiplier = e.element.parent.recipe_multipler.text
+                    multiplier = tonumber(e.element.parent.recipe_multipler.text)
                 end
             end
         end
@@ -794,7 +794,6 @@ function machine.create_gui(player, unit_number)
         machine.update_gui(self)
         --return self
     end
-    --return nil
 end
 
 function machine.update_gui(opened, bool)
