@@ -107,24 +107,24 @@ local function on_setfilter_button_click(e)
     local recipe = global.machine[unit_number].recipe
     local inputchest = global.machine[unit_number].inputchest
     if not inputchest or not inputchest.valid then return end
-    local inv=inputchest.get_inventory(defines.inventory.chest)
+    local inv = inputchest.get_inventory(defines.inventory.chest)
     if not inv or not inv.valid then return end
-    local max=#inv
-    for i = 1, max  do
-        inv.set_filter(i,nil)
+    local max = #inv
+    for i = 1, max do
+        inv.set_filter(i, nil)
     end
     inv.set_bar()
     if recipe["inputs"] then
         local slot = 1
         for name, obj in pairs(recipe["inputs"]) do
             if obj.type == "item" then
-                local item=game.item_prototypes[name]
-                local stacksize=item.stack_size
-                local number_of_slot=util.rounded((obj.count/stacksize)*multiplier)
-                for i=1,number_of_slot do
-                    inv.set_filter(slot,name)
+                local item = game.item_prototypes[name]
+                local stacksize = item.stack_size
+                local number_of_slot = util.rounded((obj.count / stacksize) * multiplier)
+                for i = 1, number_of_slot do
+                    inv.set_filter(slot, name)
                     slot = slot + 1
-                    if slot>max then
+                    if slot > max then
                         return
                     end
                 end
@@ -315,7 +315,7 @@ local function makeMachine(recipe, unit_number)
 end
 
 local function makeRecipe(recipe, unit_number, divisor)
-    local precision=0.01
+    local precision = 0.01
     local gflow =
     {
         type = "flow",
@@ -367,9 +367,9 @@ local function makeRecipe(recipe, unit_number, divisor)
                     obj.type ..
                     "=" ..
                     name ..
-                    "] x " ..format.number(flib_math.round(realNumber / divisor, precision),true,4)..
-                    " / " .. format.number(flib_math.round(math.ceil(obj.count) / divisor, precision),true,4),
-                tooltip = { "", { "?", { "item-name." .. name }, { "entity-name." .. name }, { "fluid-name." .. name } }, " : ", format.number(flib_math.round(realNumber / divisor, precision),true,4),"\n",{"gui.conso"}," : ",format.number(flib_math.round(obj.real_count / divisor, precision*precision),true,4) }
+                    "] x " .. format.number(flib_math.round(realNumber / divisor, precision), true, 4) ..
+                    " / " .. format.number(flib_math.round(math.ceil(obj.count) / divisor, precision), true, 4),
+                tooltip = { "", { "?", { "item-name." .. name }, { "entity-name." .. name }, { "fluid-name." .. name } }, " : ", format.number(flib_math.round(realNumber / divisor, precision), true, 4), "\n", { "gui.conso" }, " : ", format.number(flib_math.round(obj.real_count / divisor, precision * precision), true, 4) }
 
             }
         }
@@ -390,20 +390,21 @@ local function makeRecipe(recipe, unit_number, divisor)
         }
     }
     for name, obj in pairs(recipe.outputs) do
-            local sflow =
+        local sflow =
+        {
+            type = "flow",
+            direction = "horizontal",
+            style_mods = { left_padding = 20 },
             {
-                type = "flow",
-                direction = "horizontal",
-                style_mods = { left_padding = 20 },
-                {
-                    type = "label",
-                    style = "rcalc_machines_label",
-                    caption = "[" ..
-                        obj.type .. "=" .. name .. "] x " .. format.number(flib_math.round(obj.count/divisor,precision),true,4),
-                    tooltip = { "", { "?", { "item-name." .. name }, { "entity-name." .. name }, { "fluid-name." .. name } }, " : ", format.number(flib_math.round(math.floor(obj.count) / divisor, precision),true,4),"\n",{"gui.prod"}," : ",format.number(flib_math.round(obj.real_count / divisor, precision*precision),true,4) }
-                }
+                type = "label",
+                style = "rcalc_machines_label",
+                caption = "[" ..
+                    obj.type ..
+                    "=" .. name .. "] x " .. format.number(flib_math.round(obj.count / divisor, precision), true, 4),
+                tooltip = { "", { "?", { "item-name." .. name }, { "entity-name." .. name }, { "fluid-name." .. name } }, " : ", format.number(flib_math.round(math.floor(obj.count) / divisor, precision), true, 4), "\n", { "gui.prod" }, " : ", format.number(flib_math.round(obj.real_count / divisor, precision * precision), true, 4) }
             }
-            outputs_flow.children[#outputs_flow.children + 1] = sflow
+        }
+        outputs_flow.children[#outputs_flow.children + 1] = sflow
     end
     flow.children[#flow.children + 1] = outputs_flow
     gflow.children[#gflow.children + 1] = flow
@@ -624,12 +625,14 @@ function machine.update(unit_number)
                         if electric.energy == electric.electric_buffer_size then
                             if allMachine(recipe["machines"], contentrecipe) then
                                 global.machine[unit_number].errors["missingMachine"] = nil
-                                if allinput(recipe["inputs"], inputchest, inputs_tank) then
-                                    removeall(recipe["inputs"], inputchest, inputs_tank)
-                                    if global.machine[unit_number].errors then global.machine[unit_number].errors = {} end
-                                    addin(recipe["outputs"], outputchest, outputs_tank,
-                                        global.machine[unit_number].errors)
-                                    electric.surface.pollute(electric.position, recipe["polution"])
+                                if not outputchest.get_inventory(defines.inventory.chest).is_full() then
+                                    if allinput(recipe["inputs"], inputchest, inputs_tank) then
+                                        removeall(recipe["inputs"], inputchest, inputs_tank)
+                                        if global.machine[unit_number].errors then global.machine[unit_number].errors = {} end
+                                        addin(recipe["outputs"], outputchest, outputs_tank,
+                                            global.machine[unit_number].errors)
+                                        electric.surface.pollute(electric.position, recipe["polution"])
+                                    end
                                 end
                             else
                                 util.add_errors(global.machine[unit_number].errors, "missingMachine")
@@ -696,6 +699,7 @@ function machine.create_gui(player, unit_number)
                 {
                     type = "flow",
                     style = "flib_titlebar_flow",
+                    --drag_target = "lihop_machine",
                     {
                         type = "label",
                         style = "frame_title",
@@ -703,6 +707,11 @@ function machine.create_gui(player, unit_number)
                         ignored_by_interaction = true,
                     },
                     { type = "empty-widget", style = "flib_titlebar_drag_handle", ignored_by_interaction = true },
+                    {
+                        type = "sprite",
+                        sprite = "lihop-question-tool",
+                        tooltip = util.make_help_tooltip(),
+                    }
                 },
                 {
                     type = "frame",
@@ -711,7 +720,7 @@ function machine.create_gui(player, unit_number)
                     {
                         type = "flow",
                         name = "power",
-                        style_mods = { margin = 5, vertical_align = "center" },
+                        style_mods = { margin = 5 },
                         direction = "horizontal",
                         {
                             type = "label",
@@ -742,7 +751,7 @@ function machine.create_gui(player, unit_number)
                         action_button("requestmachine_button", unit_number, { "gui.requestmachine" },
                             { "gui.requestmachine_t" },
                             on_requestmachine_button_click),
-                            action_button("filtermachine_button", unit_number, { "gui.setfilter" },
+                        action_button("filtermachine_button", unit_number, { "gui.setfilter" },
                             { "gui.setfilter_t" },
                             on_setfilter_button_click),
                         action_button("requestinput_button", unit_number, { "gui.requestinput" },
@@ -765,6 +774,7 @@ function machine.create_gui(player, unit_number)
                             tooltip = { "gui.rcalc-capacity-divisor-description" },
                             --handler = { [defines.events.on_gui_elem_changed] = on_divisor_elem_changed },
                         },
+
                     },
 
                     {

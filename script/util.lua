@@ -459,4 +459,9 @@ function util.debug(player,filename,data,bool)
     end
 end
 
+function util.make_help_tooltip()
+    
+    return ""
+end
+
 return util
