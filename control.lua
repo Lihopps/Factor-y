@@ -21,6 +21,13 @@ script.on_configuration_changed(function(e)
 	if not global.machine then global.machine = {} end
 	if not global.gui then global.gui = {} end
 	global.emerg_recipe =util.recipe_emerg()
+	global.lihop_input_gui_state = {}
+    for _,player in pairs(game.players) do
+        if player.gui.screen.lihop_input_gui then
+            player.gui.screen.lihop_input_gui.destroy()
+        end
+        inputView.build(player)
+    end
 end)
 
 script.on_event({
@@ -28,7 +35,6 @@ script.on_event({
 }, function(e)
 	if e.setting=="lihop-prevent-emergence" then
 		global.emerg_recipe=util.recipe_emerg()
-		game.print("coucouc")
 	end
 end)
 --------------------------------------------------------------------------------------------------------

@@ -12,5 +12,11 @@ data:extend(
             name = "lihop-prevent-emergence",
             setting_type = "runtime-global",
             default_value = true,
+        },
+        {
+            type = "bool-setting",
+            name = "lihop-debug-mod",
+            setting_type = "runtime-per-user",
+            default_value = false,
         }
     })

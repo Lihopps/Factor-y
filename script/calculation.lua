@@ -63,10 +63,12 @@ local function process_intermediate(set) -- make tree
             for other_name, other_recipe in pairs(set.recipe) do --tourne en rond ?
                 if other_recipe.inputs[output] then
                     table.insert(recipe.children, other_name)
+                    table.insert(other_recipe.parents,name)
                     if other_name == name then
                         other_recipe.parent = false
                     else
                         other_recipe.parent = true
+                        other_recipe.level=math.max(other_recipe.level,recipe.level+1)
                     end
                 end
             end
@@ -170,7 +172,6 @@ function process_burner(set, entity, emissions_per_second)
     local entity_prototype = entity.prototype
     local burner_prototype = entity_prototype.burner_prototype --[[@as LuaBurnerPrototype]]
     local burner = entity.burner --[[@as LuaBurner]]
-    game.print("burner1")
     local currently_burning = burner.currently_burning
     if not currently_burning then
         local item_name = next(burner.inventory.get_contents())
@@ -182,7 +183,6 @@ function process_burner(set, entity, emissions_per_second)
         --calc_util.add_error(set, "no-fuel")
         return emissions_per_second
     end
-    game.print("burner2")
     local max_energy_usage = entity_prototype.max_energy_usage * (entity.consumption_bonus + 1)
     local burns_per_second = 1 / (currently_burning.fuel_value / (max_energy_usage / burner_prototype.effectivity) / 60)
 
@@ -199,8 +199,9 @@ function process_burner(set, entity, emissions_per_second)
             divisor = 1,
             parent = false,
             children = {},
+            parents={},
             completed = false,
-            output_mod={}
+            level=0
         }
     end
     if not set.recipe[currently_burning.name .. "-to-" .. burnt_result.name].inputs[currently_burning.name] then
@@ -251,8 +252,9 @@ local function process_crafter(set, entity, emissions_per_second)
             divisor = 1,
             parent = false,
             children = {},
+            parents={},
             completed = false,
-            output_mod={}
+            level=0
         }
     end
 
@@ -318,8 +320,9 @@ local function process_boiler(set, entity)
             divisor = 1,
             parent = false,
             children = {},
+            parents={},
             completed = false,
-            output_mod={}
+            level=0
         }
     end
     local fluid_usage = 0
@@ -399,11 +402,11 @@ local function make_recipe(entities,player)
         ::continue::
     end
     rounded_recipe(set)
-    game.write_file("set1.json", game.table_to_json(set))
+    util.debug(player,"set1.json",set)
     process_intermediate(set) --make tree
-    game.write_file("set2.json", game.table_to_json(set))
+    util.debug(player,"set2.json",set)
     make_intuitive_input(set)
-    game.write_file("set3.json", game.table_to_json(set))
+    util.debug(player,"set3.json",set)
     inputView.update_and_show(set,player)
     
 end

@@ -84,29 +84,28 @@ local function update(set, elems, player)
     global.lihop_input_gui_state[player.index].set = set
     elems.inputs_flow.clear()
     for name, state in pairs(set.forced_input) do
-        
-            local type
-            if game.item_prototypes[name] then
-                type = "item"
-            else
-                type = "fluid"
-            end
-            local flow = {
-                type = "flow",
-                direction = "horizontal",
-                style_mods = { vertical_align = "center" },
-                name = name,
-                {
-                    type = "checkbox",
-                    state = state,
+        local type
+        if game.item_prototypes[name] then
+            type = "item"
+        else
+            type = "fluid"
+        end
+        local flow = {
+            type = "flow",
+            direction = "horizontal",
+            style_mods = { vertical_align = "center" },
+            name = name,
+            {
+                type = "checkbox",
+                state = state,
 
-                },
-                {
-                    type = "label",
-                    caption = { "", "[", type, "=", name, "]", " ", { "?", { "item-name." .. name }, { "entity-name." .. name }, { "fluid-name." .. name } } }
-                },
-            }
-            gui.add(elems.inputs_flow, flow)
+            },
+            {
+                type = "label",
+                caption = { "", "[", type, "=", name, "]", " ", { "?", { "item-name." .. name }, { "entity-name." .. name }, { "fluid-name." .. name } } }
+            },
+        }
+        gui.add(elems.inputs_flow, flow)
     end
 end
 
@@ -131,7 +130,7 @@ function input.build(player)
             style = "flib_titlebar_flow",
             drag_target = "lihop_input_gui",
 
-            { type = "label",        style = "frame_title",               caption = { "gui.tag-viewer" }, ignored_by_interaction = true },
+            { type = "label",        style = "frame_title",               caption = { "gui.input_chooser" }, ignored_by_interaction = true },
             { type = "empty-widget", style = "flib_titlebar_drag_handle", ignored_by_interaction = true },
             frame_action_button("close_button", "utility/close", { "gui.close-instruction" }, hide),
         },
@@ -141,20 +140,39 @@ function input.build(player)
             style_mods = { horizontally_stretchable = true }, --{ width = 500 },
             direction = "vertical",
             {
-                type = "scroll-pane",
-                style = "flib_naked_scroll_pane_no_padding",
-                style_mods = { horizontally_stretchable = true, },
+                type = "flow",
+                direction = "horizontal",
                 {
                     type = "flow",
-                    name = "inputs_flow",
-                    style_mods = { vertical_spacing = 8, padding = 12, vertically_squashable = true },
                     direction = "vertical",
+                    style_mods = {horizontal_align ="center",vertical_align="bottom"},
+                    {
+                        type = "label",
+                        caption = {"gui.input"},
+                        style_mods = {horizontal_align ="center",vertical_align="bottom"},
+                    },
+                    {
+                        type = "label",
+                        caption = {"gui.input_choser_help"},
+                        style_mods = {horizontal_align ="center",vertical_align="bottom"},
+                    },
+                    {
+                        type = "scroll-pane",
+                        style = "flib_naked_scroll_pane_no_padding",
+                        style_mods = { horizontally_stretchable = true, },
+                        {
+                            type = "flow",
+                            name = "inputs_flow",
+                            style_mods = { vertical_spacing = 8, padding = 12, vertically_squashable = true },
+                            direction = "vertical",
+                        },
+                    },
                 },
             },
             {
                 type = "frame",
                 style = "subheader_frame",
-                action_button("confirm", { "gui.seetag" }, { "gui.tagtooltip" }, on_button_confirm_clicked),
+                action_button("confirm", { "gui.confirm" }, { "gui.tagconfirm" }, on_button_confirm_clicked),
             },
         },
     })

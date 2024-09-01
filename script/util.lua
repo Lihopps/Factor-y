@@ -1,37 +1,82 @@
-local function calcdiv(set, name, recipe, div)
+-- local function calcdiv(set, name, recipe, div)
+--     if recipe.completed then return end --already computed
+--     recipe.divisor = math.min(recipe.divisor, div)
+--     recipe.completed = true
+--     local tmp_div = 1
+--     for output, count in pairs(recipe.outputs) do
+--         if set.forced_input[output] then
+--             tmp_div = math.min(tmp_div, 1)
+--         else
+--             local tmp_output_count = count * div
+--             local input_count = 0
+--             for _, child_name in pairs(recipe.children) do
+--                 local child = set.recipe[child_name]
+--                 local child_input = child.inputs[output] or 0
+--                 --si le child fait output => input, il faut faire qqchose
+--                 input_count = input_count + child_input
+--             end
+--             tmp_div = math.min(tmp_div, tmp_output_count / input_count)
+--             game.print(name.."/"..output..": "..tmp_div)
+--         end
+--     end
+--     for _, child in pairs(recipe.children) do
+--         if child==name then
+            
+--         else
+--             set.recipe[child].divisor=math.min(set.recipe[child].divisor,tmp_div)
+--             game.print(child..": "..set.recipe[child].divisor)
+--         end
+        
+--         --calcdiv(set, child, set.recipe[child], tmp_div)
+--     end
+-- end
+
+local function calcdiv(set,recipe_name,recipe,div)
     if recipe.completed then return end --already computed
-    recipe.divisor = math.min(recipe.divisor, div)
     recipe.completed = true
     local tmp_div = 1
-    for output, count in pairs(recipe.outputs) do
-        if set.forced_input[output] then
-            tmp_div = math.min(tmp_div, 1)
+    for name,count in pairs(recipe.inputs) do
+        if set.forced_input[name] then
+            tmp_div=math.min(tmp_div,1)
         else
-            local tmp_output_count = count * div
-            local input_count = 0
-            for _, child_name in pairs(recipe.children) do
-                local child = set.recipe[child_name]
-                local child_input = child.inputs[output] or 0
-                --si le child fait output => input, il faut faire qqchose
-                input_count = input_count + child_input
+            local tmp_output_count=0
+            for _,parent_name in pairs(recipe.parents) do
+                local parent=set.recipe[parent_name]
+                local delta_parent_recipe=((parent.outputs[name] or 0)*parent.divisor-(parent.inputs[name] or 0)*parent.divisor)
+                
+                tmp_output_count=tmp_output_count+math.max(0,delta_parent_recipe)
             end
-            tmp_div = math.min(tmp_div, tmp_output_count / input_count)
+            tmp_div = math.min(tmp_div, tmp_output_count / count)
         end
     end
-    for _, child in pairs(recipe.children) do
-        calcdiv(set, child, set.recipe[child], tmp_div)
-    end
+    recipe.divisor = math.min(tmp_div, div)
 end
 
 local function rate_calc(set)
+    local level_max=0
     for name, recipe in pairs(set.recipe) do
-        if not recipe.parent then
-            calcdiv(set, name, recipe, 1)
+        level_max=math.max(recipe.level,level_max)
+    end
+
+    for i=0,level_max do
+        for name, recipe in pairs(set.recipe) do
+            if recipe.level==i then
+                calcdiv(set,name,recipe,1)
+            end
         end
     end
+
 end
 
-local function addcalc(rset, category, name, type, count, turn)
+-- local function rate_calc(set)
+--     for name, recipe in pairs(set.recipe) do
+--         if not recipe.parent then
+--             calcdiv(set, name, recipe, 1)
+--         end
+--     end
+-- end
+
+local function addcalc(rset, category, name, type, count)
     if not type then
         if game.fluid_prototypes[name] then
             type = "fluid"
@@ -42,60 +87,62 @@ local function addcalc(rset, category, name, type, count, turn)
     if not turn then turn = false end
     local path = type .. "/" .. name
     if not rset.rates[path] then
-        rset.rates[path] = { type = type, name = name, turn_round = false, input = { rate = 0 }, output = { rate = 0 } }
+        rset.rates[path] = { type = type, name = name, input = { rate = 0 }, output = { rate = 0 } }
     end
     rset.rates[path][category].rate = rset.rates[path][category].rate + count
-    rset.rates[path].turn_round = turn
 end
 
 local function make_rate_set(set) --TODO recette qui tourne en rond
     local rset = { rates = {} }
     --addcalc(rset, "output", name, "item", count * recipe.divisor)
+    -- for name_recipe, recipe in pairs(set.recipe) do
+    --     -- Gestion INPUT
+    --     if not recipe.parent then --- si il n'a pas de parent on ajoute tous les inputs
+    --         for name, count in pairs(recipe.inputs) do
+    --             addcalc(rset, "input", name, nil, count * recipe.divisor)
+    --         end
+    --     else --sinon on doit check que chaque input vient ou pas d'une recipe
+    --         for name, count in pairs(recipe.inputs) do
+    --             local not_in_recipe = true
+    --             for other_name, other_recipe in pairs(set.recipe) do
+    --                 if other_name ~= name_recipe then
+    --                     if other_recipe.outputs[name] then --il vient d'une autre recipe
+    --                         not_in_recipe = false
+    --                     end
+    --                 end
+    --             end
+    --             if not_in_recipe or set.forced_input[name] then
+    --                 addcalc(rset, "input", name, nil, count * recipe.divisor)
+    --             end
+    --         end
+    --     end
+    --     -- Gestion OUTPUT
+    --     if not next(recipe.children) then -- si il n'y a pas d'enfant c'est la fin donc on import tout
+    --         for name, count in pairs(recipe.outputs) do
+    --             addcalc(rset, "output", name, nil, count * recipe.divisor)
+    --         end
+    --     else -- donc il y a des enfants donc on check si l'output est dans un input
+    --         for name, count in pairs(recipe.outputs) do
+    --             for _, child_name in pairs(recipe.children) do
+    --                 if not set.recipe[child_name].inputs[name] or (set.recipe[child_name].inputs[name] and name_recipe == child_name) then
+    --                     addcalc(rset, "output", name, nil, count * recipe.divisor)
+    --                 else
+    --                     if set.forced_input[name] then
+    --                         addcalc(rset, "output", name, nil, count * recipe.divisor)
+    --                     end
+    --                 end
+    --             end
+    --         end
+    --     end
+    -- end
     for name_recipe, recipe in pairs(set.recipe) do
-        -- Gestion INPUT
-        if not recipe.parent then --- si il n'a pas de parent on ajoute tous les inputs
-            for name, count in pairs(recipe.inputs) do
-                addcalc(rset, "input", name, nil, count * recipe.divisor)
-            end
-        else --sinon on doit check que chaque input vient ou pas d'une recipe
-            for name, count in pairs(recipe.inputs) do
-                local not_in_recipe = true
-                for other_name, other_recipe in pairs(set.recipe) do
-                    if other_name ~= name_recipe then
-                        if other_recipe.outputs[name] then --il vient d'une autre recipe
-                            not_in_recipe = false
-                        end
-                    end
-                end
-                if not_in_recipe or set.forced_input[name] then
-                    addcalc(rset, "input", name, nil, count * recipe.divisor)
-                end
-                -- if set.forced_input[name] then
-                --     addcalc(rset, "input", name, nil, count * recipe.divisor)
-                -- end
-            end
+        for name,count in pairs(recipe.inputs) do
+            addcalc(rset, "input", name, nil, count * recipe.divisor)
         end
-        -- Gestion OUTPUT
-        if not next(recipe.children) then -- si il n'y a pas d'enfant c'est la fin donc on import tout
-            for name, count in pairs(recipe.outputs) do
-                addcalc(rset, "output", name, nil, count * recipe.divisor)
-            end
-        else -- donc il y a des enfants donc on check si l'output est dans un input
-            for name, count in pairs(recipe.outputs) do
-                for _, child_name in pairs(recipe.children) do
-                    if not set.recipe[child_name].inputs[name] or (set.recipe[child_name].inputs[name] and name_recipe == child_name) then
-                        addcalc(rset, "output", name, nil, count * recipe.divisor)
-                    else
-                        if set.forced_input[name] then
-                            addcalc(rset, "output", name, nil, count * recipe.divisor)
-                        end
-                    end
-                end
-            end
+         for name,count in pairs(recipe.outputs) do
+            addcalc(rset, "output", name, nil, count * recipe.divisor)
         end
     end
-
-
     if set.energy >= 0 then
         addcalc(rset, "input", "rcalc-power-dummy", "item", set.energy)
     else
@@ -107,6 +154,7 @@ local function make_rate_set(set) --TODO recette qui tourne en rond
         addcalc(rset, "output", "rcalc-pollution-dummy", "item", set.polution)
     end
     rset.machines = set.machines
+    rset.forced_input=set.forced_input
     return rset
 end
 
@@ -145,12 +193,13 @@ function util.createRecipe(set)
 
         local sorting_rate = 0
         if output.rate > 0 and input.rate > 0 then
-            -- category = "intermediates"
-            sorting_rate = output.rate - input.rate
-            if sorting_rate > 0 then
-                outputs[rates.name] = { type = rates.type, count = util.rounded(sorting_rate),real_count=sorting_rate }
-            elseif sorting_rate < 0 then
-                inputs[rates.name] = { type = rates.type, count = util.rounded(sorting_rate),real_count=sorting_rate }
+            if set.forced_input[rates.name] then
+                sorting_rate = output.rate - input.rate
+                if sorting_rate > 0 then
+                    outputs[rates.name] = { type = rates.type, count = util.rounded(sorting_rate),real_count=sorting_rate }
+                elseif sorting_rate < 0 then
+                    inputs[rates.name] = { type = rates.type, count = util.rounded(sorting_rate),real_count=-sorting_rate }
+                end
             end
         elseif input.rate > 0 then
             -- category = "ingredients"
@@ -313,14 +362,14 @@ end
 
 function util.set_calc_blueprint_p2(set, player)
     rate_calc(set)
-    game.write_file("set4.json", game.table_to_json(set))
+    util.debug(player,"set4.json",set)
     local rate_set = make_rate_set(set)
-    game.write_file("rate_set.json", game.table_to_json(rate_set))
+    util.debug(player,"rate_set.json",rate_set)
     local recipe = util.createRecipe(rate_set)
-    game.write_file("recipe.json", game.table_to_json(recipe))
+    util.debug(player,"recipe.json",recipe)
     local str2 = util.get_bp(recipe)
     local blueprint_item_str = "0" .. game.encode_string(str2)
-    game.write_file("final_string.txt", blueprint_item_str)
+    util.debug(player,"final_string.txt",blueprint_item_str,true)
     player.cursor_stack.import_stack(blueprint_item_str)
 end
 
@@ -391,12 +440,23 @@ function util.recipe_emerg()
     if settings.global["lihop-prevent-emergence"].value == true then
         for name, recipe in pairs(game.recipe_prototypes) do
             if not next(recipe.ingredients) then
-                table.insert(recipe_emg, name)
+                recipe_emg[name]=true
+                
             end
         end
     end
     game.write_file("recipe_emg.json", game.table_to_json(recipe_emg))
     return recipe_emg
+end
+
+function util.debug(player,filename,data,bool)
+    if settings.get_player_settings(player)["lihop-multiplier-recipe"].value then
+        if bool then
+            game.write_file(filename,data)
+        else
+            game.write_file(filename,game.table_to_json(data))
+        end
+    end
 end
 
 return util
