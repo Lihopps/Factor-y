@@ -111,6 +111,14 @@ end
 
 local input = {}
 
+local function on_gui_closed(e)
+    if e.element then
+        if e.element.name == "lihop_input_gui" then
+            input.on_gui_closed(e)
+        end
+    end
+end
+
 --- @param e EventData.on_gui_closed
 function input.on_gui_closed(e)
     hide(e, nil)
@@ -125,6 +133,7 @@ function input.build(player)
         direction = "vertical",
         style_mods = { size = { 500, 700 } },
         elem_mods = { auto_center = true },
+        handler = { [defines.events.on_gui_closed] = on_gui_closed },
         {
             type = "flow",
             style = "flib_titlebar_flow",
@@ -189,6 +198,11 @@ function input.update_and_show(set, player)
     update(set, elems, player)
     show_p(player, elems)
 end
+
+input.events={
+    [defines.events.on_gui_closed]=on_gui_closed
+
+}
 
 gui.add_handlers({
     hide = hide,

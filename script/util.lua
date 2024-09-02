@@ -1,36 +1,3 @@
--- local function calcdiv(set, name, recipe, div)
---     if recipe.completed then return end --already computed
---     recipe.divisor = math.min(recipe.divisor, div)
---     recipe.completed = true
---     local tmp_div = 1
---     for output, count in pairs(recipe.outputs) do
---         if set.forced_input[output] then
---             tmp_div = math.min(tmp_div, 1)
---         else
---             local tmp_output_count = count * div
---             local input_count = 0
---             for _, child_name in pairs(recipe.children) do
---                 local child = set.recipe[child_name]
---                 local child_input = child.inputs[output] or 0
---                 --si le child fait output => input, il faut faire qqchose
---                 input_count = input_count + child_input
---             end
---             tmp_div = math.min(tmp_div, tmp_output_count / input_count)
---             game.print(name.."/"..output..": "..tmp_div)
---         end
---     end
---     for _, child in pairs(recipe.children) do
---         if child==name then
-            
---         else
---             set.recipe[child].divisor=math.min(set.recipe[child].divisor,tmp_div)
---             game.print(child..": "..set.recipe[child].divisor)
---         end
-        
---         --calcdiv(set, child, set.recipe[child], tmp_div)
---     end
--- end
-
 local function calcdiv(set,recipe_name,recipe,div)
     if recipe.completed then return end --already computed
     recipe.completed = true
@@ -68,14 +35,6 @@ local function rate_calc(set)
 
 end
 
--- local function rate_calc(set)
---     for name, recipe in pairs(set.recipe) do
---         if not recipe.parent then
---             calcdiv(set, name, recipe, 1)
---         end
---     end
--- end
-
 local function addcalc(rset, category, name, type, count)
     if not type then
         if game.fluid_prototypes[name] then
@@ -94,47 +53,6 @@ end
 
 local function make_rate_set(set) --TODO recette qui tourne en rond
     local rset = { rates = {} }
-    --addcalc(rset, "output", name, "item", count * recipe.divisor)
-    -- for name_recipe, recipe in pairs(set.recipe) do
-    --     -- Gestion INPUT
-    --     if not recipe.parent then --- si il n'a pas de parent on ajoute tous les inputs
-    --         for name, count in pairs(recipe.inputs) do
-    --             addcalc(rset, "input", name, nil, count * recipe.divisor)
-    --         end
-    --     else --sinon on doit check que chaque input vient ou pas d'une recipe
-    --         for name, count in pairs(recipe.inputs) do
-    --             local not_in_recipe = true
-    --             for other_name, other_recipe in pairs(set.recipe) do
-    --                 if other_name ~= name_recipe then
-    --                     if other_recipe.outputs[name] then --il vient d'une autre recipe
-    --                         not_in_recipe = false
-    --                     end
-    --                 end
-    --             end
-    --             if not_in_recipe or set.forced_input[name] then
-    --                 addcalc(rset, "input", name, nil, count * recipe.divisor)
-    --             end
-    --         end
-    --     end
-    --     -- Gestion OUTPUT
-    --     if not next(recipe.children) then -- si il n'y a pas d'enfant c'est la fin donc on import tout
-    --         for name, count in pairs(recipe.outputs) do
-    --             addcalc(rset, "output", name, nil, count * recipe.divisor)
-    --         end
-    --     else -- donc il y a des enfants donc on check si l'output est dans un input
-    --         for name, count in pairs(recipe.outputs) do
-    --             for _, child_name in pairs(recipe.children) do
-    --                 if not set.recipe[child_name].inputs[name] or (set.recipe[child_name].inputs[name] and name_recipe == child_name) then
-    --                     addcalc(rset, "output", name, nil, count * recipe.divisor)
-    --                 else
-    --                     if set.forced_input[name] then
-    --                         addcalc(rset, "output", name, nil, count * recipe.divisor)
-    --                     end
-    --                 end
-    --             end
-    --         end
-    --     end
-    -- end
     for name_recipe, recipe in pairs(set.recipe) do
         for name,count in pairs(recipe.inputs) do
             addcalc(rset, "input", name, nil, count * recipe.divisor)
@@ -462,6 +380,18 @@ end
 function util.make_help_tooltip()
     
     return ""
+end
+
+--separate string
+function util.split (inputstr, sep)
+   if sep == nil then
+      sep = "%s"
+   end
+   local t={}
+   for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
+      table.insert(t, str)
+   end
+   return t
 end
 
 return util

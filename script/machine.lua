@@ -2,6 +2,7 @@ local gui = require("__flib__.gui-lite")
 local format = require("__flib__.format")
 local flib_math = require("__flib__.math")
 local util = require("script.util")
+local inputView =require("script.input_gui")
 
 --global.machine_index
 --global.machine
@@ -444,6 +445,34 @@ end
 
 local machine = {}
 
+local function on_gui_opened(e)
+    if e.entity then
+		if e.entity.name == "lihop-recipechest" then
+			local player = game.players[e.player_index]
+			local elecinterface = e.entity.surface.find_entity("lihop-machine-electric-interface", e.entity.position)
+			if not elecinterface then return end
+			if not player then return end
+			machine.create_gui(player, elecinterface.unit_number)
+		elseif e.entity.name == "lihop-machine-electric-interface" then
+			local player = game.players[e.player_index]
+			local recipechest = e.entity.surface.find_entity("lihop-recipechest", e.entity.position)
+			if not recipechest then return end
+			if not player then return end
+			player.opened = recipechest
+		end
+	end
+end
+
+local function on_gui_closed(e)
+    if e.entity then
+		if e.entity.name == "lihop-recipechest" then
+			local player = game.players[e.player_index]
+			if not player then return end
+			machine.destroy_gui(e.player_index)
+		end
+	end
+end
+
 function machine.build(entity)
     local dir = entity.direction
     entity.rotatable = false
@@ -837,6 +866,36 @@ function machine.destroy_gui(player_index)
     end
     window.destroy()
 end
+
+function machine.on_init()
+	if not global.machine_index then global.machine_index = {} end
+	if not global.machine then global.machine = {} end
+	if not global.gui then global.gui = {} end
+	if not global.lihop_input_gui_state then global.lihop_input_gui_state = {} end
+	if not global.emerg_recipe then global.emerg_recipe =util.recipe_emerg() end
+
+end
+
+
+function machine.on_configuration_changed()
+	if not global.machine_index then global.machine_index = {} end
+	if not global.machine then global.machine = {} end
+	if not global.gui then global.gui = {} end
+	global.emerg_recipe =util.recipe_emerg()
+	global.lihop_input_gui_state = {}
+    for _,player in pairs(game.players) do
+        if player.gui.screen.lihop_input_gui then
+            player.gui.screen.lihop_input_gui.destroy()
+        end
+        inputView.build(player)
+    end
+end
+
+
+machine.events={
+    [defines.events.on_gui_opened]=on_gui_opened,
+    [defines.events.on_gui_closed]=on_gui_closed
+}
 
 gui.add_handlers({
     on_requestmachine_button_clic = on_requestmachine_button_click,
