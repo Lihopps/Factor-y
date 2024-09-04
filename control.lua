@@ -11,11 +11,12 @@ handler.add_libraries({
 	require("script.machine"),
 	require("script.input_gui"),
 
-	require("script.helmod.helmod")
+	require("script.helmod.helmod"),
+	require("script.factoryplanner.factoryplanner")
 })
 
 
---gui.handle_events()
+
 
 script.on_event({
 	defines.events.on_runtime_mod_setting_changed,
@@ -149,6 +150,7 @@ end)
 --------------------------------------------------------------------------------------------------------
 --------------------------------------- Gestion des Gui ------------------------------------------------
 --------------------------------------------------------------------------------------------------------
+
 
 
 --------------------------------------------------------------------------------------------------------

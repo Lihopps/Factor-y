@@ -1,5 +1,21 @@
 local util=require("script.util")
 
+local function calc_energy_pollution(children,recipe)
+    for name,object in pairs(children) do
+        if object.class =="Block" then
+            calc_energy_pollution(object.children,recipe)
+        elseif object.class=="Recipe" then
+            local energy=object.factory.energy*util.rounded(object.factory.count)
+            local polution=object.factory.pollution
+            for _,beacon in ipairs(object.beacons) do
+                energy=energy+beacon.energy*util.rounded(beacon.count)
+            end
+            recipe.energy=recipe.energy+energy
+            recipe.polution=recipe.polution+polution
+        end
+    end
+end
+
 local function trim(s)
     return (s:gsub("^%s*(.-)%s*$", "%1"))
 end
@@ -33,10 +49,10 @@ local function helmod_to_recipe(helmod_table,player)
     util.debug(player,"helmod_table_1.json",helmod_table)
     local divisor = helmod_table.time
     
-    recipe.polution=util.round(helmod_table.block_root.pollution,2) --rounded a 0.1
-    recipe.energy=helmod_table.block_root.power --ya une couille
     for name,obj in pairs(helmod_table.block_root.summary.factories) do
-        recipe.machines[name]=obj.count
+        if obj.count>0 then
+            recipe.machines[name]=obj.count
+        end
     end
     for name,obj in pairs(helmod_table.block_root.summary.modules) do
         if obj.count>0 then
@@ -55,6 +71,8 @@ local function helmod_to_recipe(helmod_table,player)
             recipe.outputs[name]={type=obj.type,count=util.rounded(obj.amount/divisor),real_count=obj.amount/divisor}
         end
     end
+
+    calc_energy_pollution(helmod_table.block_root.children,recipe)
 
     return recipe
 end

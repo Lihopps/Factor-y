@@ -27,7 +27,7 @@ function helmod_comp.add_button(e)
     local factory_text = upload["data-text"].text
     local bouton = {
         type = "button",
-        caption = "t",
+        caption = {"gui.exporttofactory"},
         style = "helmod_button_default",
         tags = { text = factory_text },
         handler = { [defines.events.on_gui_click] = on_button_clicked },

@@ -291,7 +291,7 @@ function util.set_calc_blueprint_p2(set, player)
     player.cursor_stack.import_stack(blueprint_item_str)
 end
 
-function util.get_bp(recipe)
+function util.get_bp(recipe,factory_name,description)
     local icons = {}
     icons[1] = {
         signal = {
@@ -315,7 +315,6 @@ function util.get_bp(recipe)
 
     local bp = {
         blueprint = {
-            description = "",
             icons = icons,
             entities = {
                 {
@@ -334,6 +333,13 @@ function util.get_bp(recipe)
             version = 281479278821376
         }
     }
+
+    if factory_name then
+        bp.blueprint.label=factory_name
+    end
+    if description then
+        bp.blueprint.description=description
+    end
 
     return game.table_to_json(bp)
 end
