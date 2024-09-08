@@ -867,31 +867,6 @@ function machine.destroy_gui(player_index)
     window.destroy()
 end
 
-function machine.on_init()
-	if not global.machine_index then global.machine_index = {} end
-	if not global.machine then global.machine = {} end
-	if not global.gui then global.gui = {} end
-	if not global.lihop_input_gui_state then global.lihop_input_gui_state = {} end
-	if not global.emerg_recipe then global.emerg_recipe =util.recipe_emerg() end
-
-end
-
-
-function machine.on_configuration_changed()
-	if not global.machine_index then global.machine_index = {} end
-	if not global.machine then global.machine = {} end
-	if not global.gui then global.gui = {} end
-	global.emerg_recipe =util.recipe_emerg()
-	global.lihop_input_gui_state = {}
-    for _,player in pairs(game.players) do
-        if player.gui.screen.lihop_input_gui then
-            player.gui.screen.lihop_input_gui.destroy()
-        end
-        inputView.build(player)
-    end
-end
-
-
 machine.events={
     [defines.events.on_gui_opened]=on_gui_opened,
     [defines.events.on_gui_closed]=on_gui_closed

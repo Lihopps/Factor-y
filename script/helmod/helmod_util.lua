@@ -74,7 +74,10 @@ local function helmod_to_recipe(helmod_table,player)
 
     calc_energy_pollution(helmod_table.block_root.children,recipe)
 
-    return recipe
+    local name=helmod_table.group
+    local description=helmod_table.note
+
+    return {recipe,name,description}
 end
 
 local helmod_util = {}
@@ -91,7 +94,7 @@ function helmod_util.create_bp(e)
     local table = read(factory_text)
     if not table then return end          -- text sur le pointeur
     local recipe=helmod_to_recipe(table,player)
-    local str2 = util.get_bp(recipe)
+    local str2 = util.get_bp(recipe[1],recipe[2],recipe[3])
     local blueprint_item_str = "0" .. game.encode_string(str2)
     util.debug(player,"final_string.txt",blueprint_item_str,true)
     player.cursor_stack.import_stack(blueprint_item_str)

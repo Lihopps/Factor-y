@@ -9,7 +9,7 @@ local function fp_to_recipe(factories,player)
         outputs={}
     }
     local divisor=factories.timescale
-
+    --- il faut tout recalculer avec ce mod donc traintement plus tard
 
 
     return {recipe=recipe,name=factories.name,description=factories.notes}
