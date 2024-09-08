@@ -79,6 +79,21 @@ end
 
 local util = {}
 
+util.compat={"Helmod: Assistant for planning your factory"}
+
+function util.tooltip_table(tableau,pinner)
+    local tooltip ={"",}
+    for _,txt in ipairs(tableau) do
+        table.insert(tooltip,"\n")
+        if pinner then
+            table.insert(tooltip," "..pinner.." ")
+        end
+        table.insert(tooltip,txt)
+    end
+
+    return tooltip
+end
+
 function util.createRecipe(set)
     --game.write_file("set.json", game.table_to_json(set))
     --Structure of recipe
@@ -385,7 +400,24 @@ end
 
 function util.make_help_tooltip()
     
-    return ""
+    
+    
+    --recipe calculation
+    local tooltip={"",}
+    table.insert(tooltip,{"help-gui.recipe-calc-title"})
+    table.insert(tooltip,"\n")
+    table.insert(tooltip,"\n")
+    
+    --Big factory fonctionnement
+    table.insert(tooltip,{"help-gui.recipe-machine-title"})
+    table.insert(tooltip,{"help-gui.recipe-machine-title-2"})
+    table.insert(tooltip,"\n")
+    table.insert(tooltip,"\n")
+
+     --Big factory GUI
+    table.insert(tooltip,{"help-gui.recipe-machineg-title"})
+
+    return tooltip
 end
 
 --separate string

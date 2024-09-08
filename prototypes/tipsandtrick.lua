@@ -102,3 +102,25 @@ data:extend({
 		is_title = false,
 	},
 })
+
+
+if mods["helmod"] then
+  data:extend({
+	{
+		type = "tips-and-tricks-item",
+		name = "lihop-big-factory-helmod",
+		category = "lihop-big-factory",
+		order = "3",
+		starting_status = "locked",
+		trigger =
+		{
+			type = "research",
+			technology = "lihop-big-factory"
+		},
+		--tag = "[item=lihop-machine-electric-interface]",
+		dependencies = {"lihop-big-factory-4"},
+		image = "__Factor-y__/graphics/gui/helmod.png",
+		is_title = false,
+	},
+  })
+end

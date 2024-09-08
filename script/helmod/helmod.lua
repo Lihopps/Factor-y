@@ -11,8 +11,10 @@ end
 local helmod_comp = {}
 
 local function on_gui_click(e)
-    if helmod_comp.is_button_handler(e.element.name) and e.element.get_mod() == "helmod" then
-        helmod_comp.add_button(e)
+    if settings.global["lihop-allow-factory-exportation"].value then
+        if helmod_comp.is_button_handler(e.element.name) and e.element.get_mod() == "helmod" then
+            helmod_comp.add_button(e)
+        end
     end
 end
 

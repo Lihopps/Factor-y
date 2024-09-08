@@ -121,7 +121,7 @@ local function on_setfilter_button_click(e)
             if obj.type == "item" then
                 local item = game.item_prototypes[name]
                 local stacksize = item.stack_size
-                local number_of_slot = util.rounded((obj.count / stacksize) * multiplier)
+                local number_of_slot = math.ceil((obj.count / stacksize) * multiplier)
                 for i = 1, number_of_slot do
                     inv.set_filter(slot, name)
                     slot = slot + 1

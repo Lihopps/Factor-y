@@ -1,3 +1,5 @@
+local util=require("script.util")
+
 data:extend(
     {
         {
@@ -12,6 +14,13 @@ data:extend(
             name = "lihop-prevent-emergence",
             setting_type = "runtime-global",
             default_value = true,
+        },
+        {
+            type = "bool-setting",
+            name = "lihop-allow-factory-exportation",
+            setting_type = "runtime-global",
+            default_value = false,
+            localised_description={"",{"mod-setting-description.lihop-allow-factory-exportation"},util.tooltip_table(util.compat,"-")}
         },
         {
             type = "bool-setting",
