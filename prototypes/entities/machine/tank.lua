@@ -19,18 +19,6 @@ local sprite = {
 
 data:extend({
     {
-        type = "item",
-        name = "lihop-tank-input",
-        icon = "__Factor-y__/graphics/entities/machine/item.png" ,
-        icon_size = 64,
-        icon_mipmaps = 4,
-        flags = { "hidden" },
-        subgroup = "other",
-        order = "a[electric-energy-interface]-b[electric-energy-interface]",
-        place_result = "lihop-tank-input",
-        stack_size = 50
-    },
-    {
         type = "storage-tank",
         name = "lihop-tank-input",
         icon = "__Factor-y__/graphics/entities/machine/item.png" ,
@@ -112,7 +100,4 @@ local lihop_tank_output = table.deepcopy(data.raw["storage-tank"]["lihop-tank-in
 lihop_tank_output.name = "lihop-tank-output"
 lihop_tank_output.fluid_box.pipe_connections[1].type = "output"
 
-local lihop_tank_output_item = table.deepcopy(data.raw["item"]["lihop-tank-input"])
-lihop_tank_output_item.name = "lihop-tank-output"
-lihop_tank_output_item.place_result = "lihop-tank-output"
-data:extend { lihop_tank_output, lihop_tank_output_item }
+data:extend { lihop_tank_output}

@@ -16,17 +16,6 @@ local sprite = {
     led_light = { intensity = 0.5, size = 0 }
 }
 data:extend({
-   {
-    type = "item",
-    name = "lihop-iochest-requester",
-    icon = "__Factor-y__/graphics/entities/machine/item.png" ,
-    icon_size = 64, icon_mipmaps = 4,
-    flags = {"hidden"},
-    subgroup = "other",
-    order = "a[electric-energy-interface]-b[electric-energy-interface]",
-    place_result = "lihop-iochest-requester",
-    stack_size = 50
-  },
     {
         type = "logistic-container",
         name = "lihop-iochest-requester",
@@ -80,7 +69,5 @@ lihop_iochest_provider.name="lihop-iochest-provider"
 lihop_iochest_provider.logistic_mode="passive-provider"
 lihop_iochest_provider.inventory_type="with_bar"
 
-local lihop_iochest_provider_item = table.deepcopy(data.raw["item"]["lihop-iochest-requester"])
-lihop_iochest_provider_item.name="lihop-iochest-provider"
-lihop_iochest_provider_item.place_result="lihop-iochest-provider"
-data:extend{lihop_iochest_provider,lihop_iochest_provider_item}
+
+data:extend{lihop_iochest_provider}

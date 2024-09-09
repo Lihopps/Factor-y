@@ -12,18 +12,6 @@ local empty = {
 
 data:extend({
     {
-        type = "item",
-        name = "lihop-recipechest",
-         icon = "__Factor-y__/graphics/entities/machine/item.png" ,
-        icon_size = 64,
-        icon_mipmaps = 4,
-        flags = { "hidden" },
-        subgroup = "other",
-        order = "a[electric-energy-interface]-b[electric-energy-interface]",
-        place_result = "lihop-recipechest",
-        stack_size = 50
-    },
-    {
         type = "logistic-container",
         name = "lihop-recipechest",
         icon = "__Factor-y__/graphics/entities/machine/item.png" ,

@@ -432,4 +432,12 @@ function util.split (inputstr, sep)
    return t
 end
 
+function util.make_dict_from_array(array)
+    local dict={}
+    for _,obj in ipairs(array) do
+        dict[obj]=true
+    end
+    return dict
+end
+
 return util
